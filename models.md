@@ -10,19 +10,27 @@ User {
   displayName: string
   avatarUrl?: string
   groupIds: string[]  // в каких группах состоит, связывает участника и группу
+  // isOnline: boolean
 }
 
-GroupChat {
+Group {
   id: string
   name: string
-  type: 'group' | 'channel'  // определяет, группа или канал
-  adminIds: string[]  // group/channel admins
+  adminIds: string[]  // group admins
+  memberIds: string[]  // участники группы или канала
+}
+
+Channel {
+  id: string
+  name: string
+  adminIds: string[]  // channel admins
+  groupId: string
   memberIds: string[]  // участники группы или канала
 }
 
 Message {
   id: string
-  chatId: string  
+  chatId: string
   senderId: string
   text: string
   imageUrl?: string
@@ -31,7 +39,7 @@ Message {
   // isRead / isDelivered — Phase 2
 }
 
-PersonalChat {
+Chat {
   id: string
   participantIds: [string, string]  // ровно двое
 }
