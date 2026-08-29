@@ -1,14 +1,93 @@
-<div>
-    <h2>Homepage</h2>
-    <a routerLink="/login"> Log in </a>
+<!-- home page -->
+<h2>Home Page</h2>
 
-    <div>
-        <p>Groups</p>
-        <ul>
-            <li>Group1</li>
-            <li>Group2</li>
-            <li>Group3</li>
-        </ul>
-    </div>
-    <router-outlet></router-outlet>
+<div name="group list">
+  <p>myGroups</p>
+  <ul>
+    <li name="group link">
+      <a routerLink="/group">ProjectGroup</a>
+      <span>@3813ICT - Group 12</span>
+      <ul>
+        <li name="channel link">
+          <a routerLink="/channel">Discussions</a>
+          <span>: (2)</span>
+        </li>
+
+        <li name="channel link">
+          <a routerLink="/channel">Docs</a>
+          <span>: (5)</span>
+        </li>
+
+        <li name="channel link">
+          <a routerLink="/channel">Assignment#1</a>
+        </li>
+      </ul>
+    </li>
+
+    <br />
+
+    <li name="group link">
+      <a routerLink="/group">Guitar guys</a>
+      <span>@GuitarGuys</span>
+      <ul>
+        <li name="channel link">
+          <a routerLink="/channel">Choosing your first guitar</a>
+        </li>
+
+        <li name="channel link">
+          <a routerLink="/channel">Cool riffs</a>
+          <span>: (2)</span>
+        </li>
+
+        <li name="channel link">
+          <a routerLink="/channel">This Friday Concert</a>
+          <span>: (5)</span>
+        </li>
+      </ul>
+    </li>
+  </ul>
 </div>
+
+<div name="channel list">
+  <p>myChannels</p>
+  <ul>
+    <li name="group-link">
+      <p>ProjectGroup</p>
+      <ul>
+        <li name="channel link">
+          <a routerLink="/channel"> Discussions</a>
+          <span>Tom: idk how to do that</span>
+        </li>
+
+        <li name="channel link">
+          <a routerLink="/channel"> Docs</a>
+          <span>Jim: this is the assignment specs doc</span>
+        </li>
+
+        <li name="channel link">
+          <a routerLink="/channel"> Assignment#1</a>
+          <span>Anton: I just finished the dummy homepage part</span>
+        </li>
+      </ul>
+    </li>
+
+    <li name="group-link">
+      <p>Guitar guys</p>
+      <ul>
+        <li name="channel link">
+          <a routerLink="/"> Choosing your first guitar</a>
+          <span>Alex: idk if I should go for acoustic or electric...</span>
+        </li>
+        <li name="channel link">
+          <a routerLink="/"> Cool riffs</a>
+          <span>Timothy: Yo, check this out! I just wrote these tabs...</span>
+        </li>
+        <li name="channel link">
+          <a routerLink="/"> This Friday Concert</a>
+          <span>Jake: Are you guys coming to my first concert this Friday?</span>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<router-outlet></router-outlet>

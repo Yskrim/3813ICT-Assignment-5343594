@@ -1,0 +1,129 @@
+<nav name="home nav">
+  <h2>Admin Panel</h2>
+  <p>
+    <span>@Username | </span>
+    <span>SuperAdmin</span>
+  </p>
+  <a routerLink="/user-profile">Account</a>
+  <a routerLink="/user-profile-settings">Settings</a>
+  <a routerLink="/admin-panel">Admin Panel</a>
+</nav>
+<div>
+  <div name="group list">
+    <p>Groups</p>
+    <ul>
+      <li name="group link">
+        <a routerLink="/group">ProjectGroup</a>
+        <span>@3813ICT - Group 12</span>
+        <ul>
+          <li name="channel link">
+            <a routerLink="/chat">Discussions</a>
+          </li>
+
+          <li name="channel link">
+            <a routerLink="/chat">Docs</a>
+          </li>
+
+          <li name="channel link">
+            <a routerLink="/chat">Assignment#1</a>
+          </li>
+        </ul>
+      </li>
+
+      <br />
+
+      <li name="group link">
+        <a routerLink="/group">Guitar guys</a>
+        <span>@GuitarGuys</span>
+        <ul>
+          <li name="channel link">
+            <a routerLink="/chat">Choosing your first guitar</a>
+          </li>
+
+          <li name="channel link">
+            <a routerLink="/chat">Cool riffs</a>
+          </li>
+
+          <li name="channel link">
+            <a routerLink="/chat">This Friday Concert</a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div name="channel list">
+    <p>Channels</p>
+    <ul>
+      <li name="group-link">
+        <p>ProjectGroup</p>
+        <ul>
+          <li name="channel link">
+            <a routerLink="/chat"> Discussions</a>
+          </li>
+
+          <li name="channel link">
+            <a routerLink="/chat"> Docs</a>
+          </li>
+
+          <li name="channel link">
+            <a routerLink="/chat"> Assignment#1</a>
+          </li>
+        </ul>
+      </li>
+
+      <li name="group-link">
+        <p>Guitar guys</p>
+        <ul>
+          <li name="channel link">
+            <a routerLink="/"> Choosing your first guitar</a>
+          </li>
+          <li name="channel link">
+            <a routerLink="/"> Cool riffs</a>
+          </li>
+          <li name="channel link">
+            <a routerLink="/"> This Friday Concert</a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div name="request list">
+    <p>Requests</p>
+    <ol>
+      <li>
+        <a routerLink="/">#Request</a>
+        <span> - type: Ban</span>
+        <div>
+          <p>Request message content</p>
+        </div>
+        <button>View</button>
+        <button>Approve</button>
+        <button>Discard</button>
+      </li>
+      <br />
+      <li>
+        <a routerLink="/">#Request</a>
+        <span> - type: Create</span>
+        <div>
+          <p>Request message content</p>
+        </div>
+        <button>View</button>
+        <button>Approve</button>
+        <button>Discard</button>
+      </li>
+      <br />
+      <li>
+        <a routerLink="/">#Request</a>
+        <span> - type: Delete</span>
+        <div>
+          <p>Request message content</p>
+        </div>
+        <button>View</button>
+        <button>Approve</button>
+        <button>Discard</button>
+      </li>
+    </ol>
+  </div>
+</div>
