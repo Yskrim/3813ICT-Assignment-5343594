@@ -10,6 +10,7 @@ User {
   displayName: string
   avatarUrl?: string
   groupIds: string[]  // в каких группах состоит, связывает участника и группу
+  dateOfBirth: Date
   // isOnline: boolean
 }
 
