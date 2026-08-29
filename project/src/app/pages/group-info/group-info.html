@@ -1,0 +1,91 @@
+<!-- group info page -->
+
+<div class="card p-4">
+	<div class="mb-4">
+		<h4 class="mb-4">Project Group</h4>
+		<div class="d-flex gap-2">
+			<button class="btn btn-sm btn-secondary" routerLink="/group">Go back</button>
+			<button class="btn btn-sm btn-outline-primary">Change name</button>
+			<button class="btn btn-sm btn-outline-primary">Change image</button>
+			<button class="btn btn-sm btn-outline-primary">Change theme</button>
+			<button class="btn btn-sm btn-danger">Delete group</button>
+		</div>
+	</div>
+
+	<div>
+		<div class="mb-4">
+			<div class="mb-2 fw-bold">Channels</div>
+			<ul class="list-group">
+				<li class="list-group-item d-flex justify-content-between align-items-center">
+					<a routerLink="/channel">Discussions</a>
+					<button routerLink="/channel" class="btn btn-sm">Open</button>
+				</li>
+				<li class="list-group-item d-flex justify-content-between align-items-center">
+					<a routerLink="/channel">Docs</a>
+					<button routerLink="/channel" class="btn btn-sm">Open</button>
+				</li>
+				<li class="list-group-item d-flex justify-content-between align-items-center">
+					<a routerLink="/channel">Assignment#1</a>
+					<button routerLink="/channel" class="btn btn-sm">Open</button>
+				</li>
+			</ul>
+		</div>
+
+		<div>
+			<div class="mb-2 fw-bold">People</div>
+			<ul class="list-group">
+				<li class="list-group-item">
+					<div
+						class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
+					>
+						<div>
+							<a routerLink="/profile" class="fw-semibold">UserName</a>
+							<div class="text-muted">@Username</div>
+							<div class="text-muted">Role: Admin</div>
+						</div>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-outline-warning">Kick</button>
+							<button class="btn btn-sm btn-outline-danger">Ban</button>
+							<button class="btn btn-sm btn-outline-primary">Make admin</button>
+							<button class="btn btn-sm btn-outline-secondary">Report</button>
+						</div>
+					</div>
+				</li>
+				<li class="list-group-item">
+					<div
+						class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
+					>
+						<div>
+							<a routerLink="/profile" class="fw-semibold">Anton Korotkov</a>
+							<div class="text-muted">@korton</div>
+							<div class="text-muted">Role: SuperAdmin</div>
+						</div>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-outline-warning">Kick</button>
+							<button class="btn btn-sm btn-outline-danger">Ban</button>
+							<button class="btn btn-sm btn-outline-primary">Make admin</button>
+							<button class="btn btn-sm btn-outline-secondary">Report</button>
+						</div>
+					</div>
+				</li>
+				<li class="list-group-item">
+					<div
+						class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
+					>
+						<div>
+							<a routerLink="/profile" class="fw-semibold">James Cook</a>
+							<div class="text-muted">@Jimmy</div>
+							<div class="text-muted">Role: User</div>
+						</div>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-outline-warning">Kick</button>
+							<button class="btn btn-sm btn-outline-danger">Ban</button>
+							<button class="btn btn-sm btn-outline-primary">Make admin</button>
+							<button class="btn btn-sm btn-outline-secondary">Report</button>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>

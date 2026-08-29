@@ -1,9 +1,14 @@
-<nav name="app nav">
-  <a routerLink="/">Home</a>
-  | <a routerLink="/login">Login</a>
-  | <a routerLink="/user-profile">Profile</a>
-  | <a routerLink="/user-profile-settings">Settings</a>
-  | <a routerLink="/admin-panel">Admin Pannel</a>
+<nav class="navbar bg-primary text-light mb-4" name="app nav">
+  <div class="d-flex px-5">
+    <a class="navbar-brand text-light" routerLink="/">App</a>
+    <a class="nav-link p-2" routerLink="/">Home</a>
+    <a class="nav-link p-2" routerLink="/login">Login</a>
+    <a class="nav-link p-2" routerLink="/user-profile">Profile</a>
+    <a class="nav-link p-2" routerLink="/user-profile-settings">Settings</a>
+    <a class="nav-link p-2" routerLink="/admin-panel">Admin Pannel</a>
+  </div>
 </nav>
+<div class="container w-75">
+  <router-outlet></router-outlet>
+</div>
 
-<router-outlet></router-outlet>

@@ -1,0 +1,9 @@
+.group-heading {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+
+.channel-preview {
+  display: flex;
+  gap: 0.75rem;
+}

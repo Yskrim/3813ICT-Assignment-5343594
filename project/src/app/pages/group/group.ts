@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 
 @Component({
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink],
   selector: 'app-group',
   styleUrl: './group.css',
   templateUrl: './group.html',
