@@ -1,61 +1,75 @@
-<div>
-	<h4 class="mb-3">Profile Settings</h4>
+@if (user) {
+	<nav name="home nav">
+		<p>{{ user.username }} · {{ user.role }}</p>
+		<h4 class="mb-4">Account Settings</h4>
+	</nav>
 
-	<div class="card p-4">
-		<div class="d-flex align-items-center">
-			<img
-				src="https://placehold.co/130x130"
-				class="img-thumbnail me-3"
-				alt="Static profile image"
+	<div class="d-flex form-control p-3 align-items-center mb-2">
+		<label class="mb-0 flex-grow-1">
+			Display Name:
+			<input
+				[(ngModel)]="displayName"
+				class="mx-2 form-control form-control-sm d-inline-block w-auto"
 			/>
-
-			<div class="d-flex flex-column flex-grow-1">
-				<div class="">
-					<div class="d-flex align-items-baseline gap-2 fw-bold fs-5 mb-1">
-						Anton Korotkov <span class="text-muted fs-6">@korton</span>
-					</div>
-				</div>
-
-				<div class="d-flex p-2 form-control align-items-center mb-2">
-					<p class="mb-0 flex-grow-1">
-						<span class="text-muted">Age</span>
-						<span class="mx-2">24</span>
-					</p>
-					<button class="btn btn-sm btn-outline-primary">Change</button>
-				</div>
-				<div class="d-flex p-2 form-control align-items-center">
-					<p class="mb-0 flex-grow-1">
-						<span class="text-muted">Bio</span>
-						<span class="mx-2">Passionate developer and guitarist.</span>
-					</p>
-					<button class="btn btn-sm btn-outline-primary">Change</button>
-				</div>
-			</div>
-		</div>
-		<hr class="my-4" />
-		<div class="nav">
-			<div class="d-flex form-control p-3 align-items-center mb-2">
-				<p class="mb-0 flex-grow-1">
-					Display Name: <strong class="ms-2">Anton Korotkov</strong>
-				</p>
-				<button class="btn btn-sm btn-outline-primary">Change Name</button>
-			</div>
-			<div class="d-flex form-control p-3 align-items-center mb-2">
-				<p class="mb-0 flex-grow-1">User Name: <strong class="ms-2">@korton</strong></p>
-				<button class="btn btn-sm btn-outline-primary">Change Username</button>
-			</div>
-			<div class="d-flex form-control p-3 align-items-center mb-2">
-				<p class="mb-0 flex-grow-1">Password <strong class="ms-2"></strong></p>
-				<button class="btn btn-sm btn-outline-primary">Change Password</button>
-			</div>
-			<div class="d-flex form-control p-3 align-items-center mb-2">
-				<p class="mb-0 flex-grow-1">Profile Image</p>
-				<button class="btn btn-sm btn-outline-primary">Change Image</button>
-			</div>
-			<div class="d-flex form-control p-3 align-items-center">
-				<p class="mb-0 flex-grow-1 text-danger fw-bold">Danger zone</p>
-				<button class="btn btn-sm btn-outline-danger">Delete Account</button>
-			</div>
-		</div>
+		</label>
+		<button type="button" class="btn btn-sm btn-outline-primary" (click)="saveDisplayName()">
+			Save
+		</button>
 	</div>
-</div>
+
+	<div class="d-flex form-control p-3 align-items-center mb-2">
+		<label class="mb-0 flex-grow-1">
+			Username:
+			<input
+				[(ngModel)]="username"
+				class="mx-2 form-control form-control-sm d-inline-block w-auto"
+			/>
+		</label>
+		<button type="button" class="btn btn-sm btn-outline-primary" (click)="saveUsername()">
+			Save
+		</button>
+	</div>
+
+	<div class="d-flex form-control p-3 align-items-center mb-2">
+		<label class="mb-0 flex-grow-1">
+			Password:
+			<input
+				[(ngModel)]="password"
+				type="password"
+				class="mx-2 form-control form-control-sm d-inline-block w-auto"
+			/>
+		</label>
+		<button type="button" class="btn btn-sm btn-outline-primary" (click)="savePassword()">
+			Save
+		</button>
+	</div>
+
+
+	<img
+		[src]="avatarUrl || 'https://placehold.co/130x130'"
+		class="img-thumbnail mb-3"
+		alt="Profile"
+	/>
+	<div class="d-flex form-control p-3 align-items-center mb-2">
+		<label class="mb-0 flex-grow-1">
+			Avatar URL:
+			<input
+				[(ngModel)]="avatarUrl"
+				class="mx-2 form-control form-control-sm d-inline-block w-auto"
+			/>
+		</label>
+		<button type="button" class="btn btn-sm btn-outline-primary" (click)="saveAvatar()">
+			Save
+		</button>
+	</div>
+
+	<div class="d-flex form-control p-3 align-items-center mb-2">
+		<label class="mb-0 flex-grow-1">
+			Danger zone (you won't be able to undo this)
+		</label>
+		<button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteAccount()">
+			Delete Account
+		</button>
+	</div>
+	<button type="button" class="w-100 btn btn-primary my-4" (click)="logout()">Log out</button>
+}

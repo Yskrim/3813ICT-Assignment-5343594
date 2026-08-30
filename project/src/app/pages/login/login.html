@@ -1,11 +1,20 @@
 <div class="container">
-  <h4 class="mb-3">Log in to your account</h4>
+	<h4 class="mb-3">Log in to your account</h4>
 
-  <form>
-    <input class="form-control mb-2" name="username" placeholder="username" />
-    <input class="form-control mb-4" name="password" placeholder="password" />
-    <button class="btn btn-primary w-100" routerLink="/">Log in</button>
-  </form>
-
-  <router-outlet></router-outlet>
+	<form (ngSubmit)="onSubmit()">
+		<input
+			class="form-control mb-2"
+			name="username"
+			placeholder="username"
+			[(ngModel)]="username"
+		/>
+		<input
+			class="form-control mb-4"
+			name="password"
+			placeholder="password"
+			type="password"
+			[(ngModel)]="password"
+		/>
+		<button class="btn btn-primary w-100" type="submit">Log in</button>
+	</form>
 </div>

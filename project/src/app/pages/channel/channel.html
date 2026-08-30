@@ -1,36 +1,35 @@
 <!-- channel page -->
-<div class="container py-3" style="max-width: 700px;">
-  <div class="d-flex justify-content-between align-items-center mb-3" name="channel header">
-    <div>
-      <h4>ProjectGroup/ <span class="fw-light">Discussions</span></h4>
-    </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-secondary" routerLink="/">Go back</button>
-      <button class="btn btn-outline-primary" routerLink="/channel-info">Channel info</button>
-    </div>
-  </div>
+<div class="container py-3" style="max-width: 700px">
+	<div class="d-flex justify-content-between align-items-center mb-3" name="channel header">
+		<div>
+			<h4>ProjectGroup/ <span class="fw-light">Discussions</span></h4>
+		</div>
+		<div class="d-flex gap-2">
+			<button class="btn btn-sm btn-primary" (click)="goBack()">Go back</button>
+			<button class="btn btn-sm btn-outline-primary" [routerLink]="['/groups', gId, 'channels', cId, 'info']">Channel info</button>
+		</div>
+	</div>
 
-  <div class="card mb-3" style="min-height: 350px; max-height: 60vh; overflow-y: auto;">
-    <ul class="list-group ">
-     
-      <!-- message -->
-      <li class="list-group-item bg-light p-3">
-        <div class="d-flex">
-          <div class="flex-grow-1">
-            <div>
-              Hey @everyone, please welcome <span class="fw-semibold">James Cook</span>! He will be joining us on this project.<br>
-              I've only heard the best about you, so make yourself at home.
-            </div>
-            <div class="text-muted small mb-1">@korton · today at 8:20</div>
-          </div>
-        </div>
-      </li>
-    
-    </ul>
-  </div>
+	<div class="card mb-3" style="min-height: 350px; max-height: 60vh; overflow-y: auto">
+		<ul class="list-group">
 
-  <form name="message input form" class="d-flex gap-2">
-    <input class="form-control flex-grow-1" type="text" placeholder="Type your message..." />
-    <button class="btn btn-primary">Send</button>
-  </form>
+			@for( msg of messages; track msg.id) {
+				<li class="list-group-item bg-light p-3">
+					<div class="d-flex">
+						<div class="flex-grow-1">
+							<div>
+								{{ msg.text }}
+							</div>
+							<div class="text-muted small mb-1">{{ msg.senderId }} · {{ msg.createdAt }}</div>
+						</div>
+					</div>
+				</li>
+			}
+		</ul>
+	</div>
+
+	<form name="message input form" class="d-flex gap-2">
+		<input class="form-control flex-grow-1" type="text" placeholder="Type your message..." />
+		<button class="btn btn-primary">Send</button>
+	</form>
 </div>

@@ -2,13 +2,14 @@
 
 <div class="card p-4">
 	<div class="mb-4">
-		<h4 class="mb-4">Project Group</h4>
+		<h6 class="text-muted">Group Info</h6>
+		<h4 class="mb-4">{{ group?.name }}</h4>
 		<div class="d-flex gap-2">
-			<button class="btn btn-sm btn-secondary" routerLink="/group">Go back</button>
+			<button class="btn btn-sm btn-primary" (click)="goBack()">Go back</button>
 			<button class="btn btn-sm btn-outline-primary">Change name</button>
 			<button class="btn btn-sm btn-outline-primary">Change image</button>
 			<button class="btn btn-sm btn-outline-primary">Change theme</button>
-			<button class="btn btn-sm btn-danger">Delete group</button>
+			<button class="btn btn-sm btn-outline-danger">Delete group</button>
 		</div>
 	</div>
 
@@ -16,75 +17,42 @@
 		<div class="mb-4">
 			<div class="mb-2 fw-bold">Channels</div>
 			<ul class="list-group">
-				<li class="list-group-item d-flex justify-content-between align-items-center">
-					<a routerLink="/channel">Discussions</a>
-					<button routerLink="/channel" class="btn btn-sm">Open</button>
-				</li>
-				<li class="list-group-item d-flex justify-content-between align-items-center">
-					<a routerLink="/channel">Docs</a>
-					<button routerLink="/channel" class="btn btn-sm">Open</button>
-				</li>
-				<li class="list-group-item d-flex justify-content-between align-items-center">
-					<a routerLink="/channel">Assignment#1</a>
-					<button routerLink="/channel" class="btn btn-sm">Open</button>
-				</li>
+				
+				@for (ch of channels; track ch.id) {
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+						<a [routerLink]="['/groups', gId, 'channels', ch.id]">{{ ch.name }}</a>
+
+						<button [routerLink]="['/groups', gId, 'channels', ch.id]" class="btn btn-sm">Open</button>
+					</li>
+				}
+
 			</ul>
 		</div>
 
 		<div>
 			<div class="mb-2 fw-bold">People</div>
 			<ul class="list-group">
-				<li class="list-group-item">
-					<div
-						class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
-					>
-						<div>
-							<a routerLink="/profile" class="fw-semibold">UserName</a>
-							<div class="text-muted">@Username</div>
-							<div class="text-muted">Role: Admin</div>
+
+				@for (mem of members; track mem.id) {
+					<li class="list-group-item">
+						<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+							<div>
+								<a routerLink="/profile" class="fw-semibold">{{
+									mem.displayName
+								}}</a>
+								<div class="text-muted">{{ mem.username }}</div>
+								<div class="text-muted">Role: {{ mem.role }}</div>
+							</div>
+							<div class="d-flex gap-2">
+								<button class="btn btn-sm btn-outline-warning">Kick</button>
+								<button class="btn btn-sm btn-outline-danger">Ban</button>
+								<button class="btn btn-sm btn-outline-primary">Make admin</button>
+								<button class="btn btn-sm btn-outline-secondary">Report</button>
+							</div>
 						</div>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-outline-warning">Kick</button>
-							<button class="btn btn-sm btn-outline-danger">Ban</button>
-							<button class="btn btn-sm btn-outline-primary">Make admin</button>
-							<button class="btn btn-sm btn-outline-secondary">Report</button>
-						</div>
-					</div>
-				</li>
-				<li class="list-group-item">
-					<div
-						class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
-					>
-						<div>
-							<a routerLink="/profile" class="fw-semibold">Anton Korotkov</a>
-							<div class="text-muted">@korton</div>
-							<div class="text-muted">Role: SuperAdmin</div>
-						</div>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-outline-warning">Kick</button>
-							<button class="btn btn-sm btn-outline-danger">Ban</button>
-							<button class="btn btn-sm btn-outline-primary">Make admin</button>
-							<button class="btn btn-sm btn-outline-secondary">Report</button>
-						</div>
-					</div>
-				</li>
-				<li class="list-group-item">
-					<div
-						class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
-					>
-						<div>
-							<a routerLink="/profile" class="fw-semibold">James Cook</a>
-							<div class="text-muted">@Jimmy</div>
-							<div class="text-muted">Role: User</div>
-						</div>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-outline-warning">Kick</button>
-							<button class="btn btn-sm btn-outline-danger">Ban</button>
-							<button class="btn btn-sm btn-outline-primary">Make admin</button>
-							<button class="btn btn-sm btn-outline-secondary">Report</button>
-						</div>
-					</div>
-				</li>
+					</li>
+				}
+				
 			</ul>
 		</div>
 	</div>
