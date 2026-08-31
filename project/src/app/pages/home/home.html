@@ -45,7 +45,7 @@
 									>
 										Channel : {{ ch.name }}
 									</a>
-									<button routerLink="/channel" class="btn btn-sm btn-light">
+									<button [routerLink]="['/groups', group.id, 'channels', ch.id]" class="btn btn-sm btn-light">
 										Read
 									</button>
 								</div>

@@ -15,6 +15,10 @@ export class UserService {
         return USERS.filter(u => ids.includes(u.id));
     }
 
+    getByIdsList(ids: string[]): User[] {
+        return USERS.filter(u => ids.includes(u.id))
+    }
+
     updateUser(id: string, changes: Partial<User>): User | undefined {
         const index = USERS.findIndex(u => u.id === id);
         if (index === -1) return undefined;

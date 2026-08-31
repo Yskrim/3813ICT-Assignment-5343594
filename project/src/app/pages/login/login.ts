@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
@@ -15,20 +15,28 @@ export class LoginPage {
 	password = '';
 	error = '';
 
+	form = new FormGroup({
+		username: new FormControl('', Validators.required),
+		password: new FormControl('', Validators.required)
+	})
+
 	constructor(
 		private auth: AuthService,
 		private router: Router,
 	) { }
-	
+
 	onSubmit(): void {
 		this.error = '';
-		
-		const ok = this.auth.login();
-		
-		// if (!ok) {
-		// 	this.error = 'Invalid username or password';
-		// 	return;
-		// }
+
+		const ok = this.auth.login(this.username, this.password);
+
+		if (!ok) {
+			alert('Invalid creds')
+			this.form.reset();
+			return
+		}
+
+
 		this.router.navigate(['/home']);
 	}
 }
