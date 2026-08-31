@@ -1,0 +1,44 @@
+import { User } from "../models"
+
+export const USERS: User[] = [
+    {
+        id: '1',
+        username: '@korton',
+        password: '123',
+        role: 'superAdmin',
+        displayName: 'Anton Korotkov',
+        avatarUrl: '',
+        groupIds: ['1', '2'],
+        dateOfBirth: new Date('2002-01-01'),
+    },
+    {
+        id: '2',
+        username: '@alice',
+        password: '123',
+        role: 'groupAdmin',
+        displayName: 'Alice Applesauce',
+        avatarUrl: '',
+        groupIds: ['1', '2', '4'],
+        dateOfBirth: new Date('2000-03-15'),
+    },
+    {
+        id: '3',
+        username: '@bob',
+        password: '123',
+        role: 'user',
+        displayName: 'Bob Butters',
+        avatarUrl: '',
+        groupIds: ['1', '3', '2', '4'],
+        dateOfBirth: new Date('2002-04-23'),
+    },
+    {
+        id: '4',
+        username: '@charlie',
+        password: '123',
+        role: 'groupAdmin',
+        displayName: 'Charlie Chouder',
+        avatarUrl: '',
+        groupIds: ['2', '3', '4'],
+        dateOfBirth: new Date('2005-11-11'),
+    },
+]

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Group } from '../models';
-import { GROUPS, USERS } from '../data/seed';
+import { GROUPS } from '../data/seed';
 
 @Injectable({ providedIn: 'root' })
 export class GroupService {
