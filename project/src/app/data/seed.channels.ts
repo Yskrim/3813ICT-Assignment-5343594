@@ -3,21 +3,21 @@ import { Channel } from "../models";
 export const CHANNELS: Channel[] = [
     // project channels
     {
-        id: 'c-1',
+        id: '1',
         name: 'Discussions',
         groupId: '1',
         adminIds: ['1', '2'],
         memberIds: ['2', '3', '1'],
     },
     {
-        id: 'c-2',
+        id: '2',
         name: 'Docs',
         groupId: '1',
         adminIds: ['1', '2'],
         memberIds: ['2', '3', '1'],
     },
     {
-        id: 'c-3',
+        id: '3',
         name: 'Assignment-1',
         groupId: '1',
         adminIds: ['1', '2'],
@@ -26,7 +26,7 @@ export const CHANNELS: Channel[] = [
 
     // music club chats
     {
-        id: 'c-4',
+        id: '4',
         name: 'Events',
         groupId: '4',
         adminIds: ['2'],
@@ -35,7 +35,7 @@ export const CHANNELS: Channel[] = [
 
     // meetup chats
     {
-        id: 'c-5',
+        id: '5',
         name: 'Discussions',
         groupId: '2',
         adminIds: ['4'],
@@ -44,14 +44,14 @@ export const CHANNELS: Channel[] = [
 
     // cybersport chats
     {
-        id: 'c-6',
+        id: '6',
         name: 'General',
         groupId: '3',
         adminIds: ['4'],
         memberIds: ['3', '1', '4'],
     },
     {
-        id: 'c-7',
+        id: '7',
         name: 'GTA VI',
         groupId: '3',
         adminIds: ['4'],

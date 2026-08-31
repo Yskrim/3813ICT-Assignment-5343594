@@ -28,8 +28,8 @@
 		</ul>
 	</div>
 
-	<form name="message input form" class="d-flex gap-2">
-		<input class="form-control flex-grow-1" type="text" placeholder="Type your message..." />
-		<button class="btn btn-primary">Send</button>
+	<form [formGroup]='form' (ngSubmit)="handleSubmit()" name="message input form" class="d-flex gap-2">
+		<input class="form-control flex-grow-1" formControlName="message" type="text" placeholder="Type your message..." />
+		<button type="submit" [disabled]="!form.value.message?.trim()" class="btn btn-primary">Send</button>
 	</form>
 </div>
