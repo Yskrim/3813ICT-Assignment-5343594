@@ -47,11 +47,12 @@
 
 	<img
 		[src]="avatarUrl || 'https://placehold.co/130x130'"
-		class="img-thumbnail mb-3"
+		class="img-thumbnail img-fluid mb-3"
+		style="max-width: 200px;"
 		alt="Profile"
 	/>
 	<div class="d-flex form-control p-3 align-items-center mb-2">
-		<label class="mb-0 flex-grow-1">
+		<label class="mb-0 flex-grow-1 flex-shrink-1">
 			Avatar URL:
 			<input
 				[(ngModel)]="avatarUrl"
