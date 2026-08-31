@@ -1,87 +1,110 @@
-<nav name="home nav">
-	<p>
-		<span>@korton · </span>
-		<span>SuperAdmin</span>
-	</p>
-	<h4 class="mb-4">Admin Panel</h4>
-</nav>
-	
-  <div>
+@if (user?.role === 'groupAdmin' || user?.role === 'superAdmin') {
+	<nav name="home nav">
+		<p>
+			<span>{{ user!.username }} · </span>
+			<span>{{ user!.role }}</span>
+		</p>
+		<h4 class="mb-4">Admin Panel</h4>
+	</nav>
+
+	<div>
 		<div class="card mb-4">
 			<div class="card-header py-2 fw-semibold bg-primary text-light px-3">
 				User Requests
 			</div>
+
 			<ul class="list-group list-group-flush">
-				<!-- Request Item Start -->
-				<li class="list-group-item py-3">
-					<div class="d-flex flex-column flex-md-row gap-3">
-						<!-- Request Info -->
-						<div class="flex-shrink-0 text-break w-25">
-							<div class="fw-semibold">Request ID: #00123</div>
-              <ol>
-                <li class="text-muted small">Sender: <span class="fw-normal">@JimCook</span></li>
-                <li class="text-muted small">Role: <span class="fw-normal">Admin</span></li>
-                <li class="text-muted small">Target: <span class="fw-normal">@Username</span></li>
-                <li class="text-muted small">Request type: <span class="fw-normal">Ban</span></li>
-                <li class="text-muted small">Date: <span class="fw-normal">2023-08-12</span></li>
-              </ol>
+				@for (req of requests.superRequests; track req.id) {
+					<li class="list-group-item py-3">
+						<div class="d-flex flex-column flex-md-row gap-3">
+							<div class="flex-shrink-0 text-break w-25">
+								<div class="fw-semibold">Request ID: {{ req.id }}</div>
+								<ol>
+									<li class="text-muted small">
+										Sender:
+										<span class="fw-normal">@{{ issuerName(req.issuerId) }}</span>
+									</li>
+									<li class="text-muted small">
+										Role:
+										<span class="fw-normal">{{ issuerRole(req.issuerId) }}</span>
+									</li>
+									<li class="text-muted small">
+										Target:
+										<span class="fw-normal">{{ req.id }}</span>
+									</li>
+									<li class="text-muted small">
+										Request type:
+										<span class="fw-normal">{{ req.type }}</span>
+									</li>
+									<li class="text-muted small">
+										Date:
+										<span class="fw-normal">{{ formatDate(req.createdAt) }}</span>
+									</li>
+								</ol>
+							</div>
+
+							<div
+								class="card p-2 flex-grow-1 border border-1 mb-2 mb-md-0"
+								style="background: #f8f9fa"
+							>
+								<div class="mb-2 text-secondary">
+									<span class="fw-semibold">Reason:</span>
+								</div>
+								<p class="mb-0 small">{{ req.note }}</p>
+							</div>
+
+							<div
+								class="d-flex flex-column gap-1 align-items-end"
+								style="min-width: 110px"
+							>
+								<button
+									class="btn btn-sm btn-outline-success mb-1 w-100"
+									(click)="approve(req)"
+								>
+									Approve
+								</button>
+								<button
+									class="btn btn-sm btn-outline-danger w-100"
+									(click)="reject(req)"
+								>
+									Decline
+								</button>
+							</div>
 						</div>
-						<!-- Request Content -->
-						<div class="card p-2 flex-grow-1 border border-1 mb-2 mb-md-0" style="background: #f8f9fa;">
-							<div class="mb-2 text-secondary"><span class="fw-semibold">Reason:</span></div>
-							<p class="mb-0 small">
-								Nulla est ullamco ut irure incididunt nulla Lorem Lorem minim irure officia enim reprehenderit.
-							</p>
-						</div>
-						<!-- Actions -->
-						<div class="d-flex flex-column gap-1 align-items-end" style="min-width: 110px;">
-							<button class="btn btn-sm btn-outline-primary mb-1 w-100">View Details</button>
-							<button class="btn btn-sm btn-outline-success mb-1 w-100">Approve</button>
-							<button class="btn btn-sm btn-outline-danger w-100">Decline</button>
-						</div>
-					</div>
-				</li>
+					</li>
+				} @empty {
+					<li class="list-group-item py-3 text-muted">No pending requests.</li>
+				}
 			</ul>
 		</div>
 
 		<div class="card">
 			<p class="card-header py-2 fw-semibold bg-primary text-light">Groups</p>
 			<ul class="list-group list-group-flush">
-				<li class="list-group-item list-group-item-action p-0">
-					<div
-						class="group-heading px-3 py-2 d-flex justify-content-between align-items-center"
-					>
-						<div>
-							<a routerLink="/group" class="text-decoration-none .bg-light">
-								ProjectGroup
-							</a>
-							<small class="text-muted ms-1">@3813ICT - Group 12</small>
-						</div>
-						<button routerLink="/channel-info" class="btn btn-sm">Open</button>
-					</div>
-				</li>
-			</ul>
-		</div>
-
-		<br />
-
-		<div class="card">
-			<p class="card-header py-2 fw-semibold bg-primary text-light">Channels</p>
-			<ul class="list-group list-group-flush">
-				<li class="list-group-item list-group-item-action p-0">
-					<div
-						class="group-heading px-3 py-2 d-flex justify-content-between align-items-center"
-					>
-						<div>
-							<small class="text-muted ms-1">ProjectGroup/ </small>
-							<a routerLink="/group" class="text-decoration-none .bg-light"
-								>Discussions</a
+				@for (group of groups; track group.id) {
+					<li class="list-group-item list-group-item-action p-0">
+						<div
+							class="group-heading px-3 py-2 d-flex justify-content-between align-items-center"
+						>
+							<div>
+								<a
+									[routerLink]="['/groups', group.id]"
+									class="text-decoration-none .bg-light"
+								>
+									{{ group.name }}
+								</a>
+								<small class="text-muted ms-1">{{ group.id }}</small>
+							</div>
+							<button
+								[routerLink]="['/groups', group.id, 'info']"
+								class="btn btn-sm"
 							>
-							<small class="text-muted ms-1">@3813ICT-Group-12</small>
+								Open
+							</button>
 						</div>
-						<button routerLink="/channel-info" class="btn btn-sm">Manage</button>
-					</div>
-				</li>
+					</li>
+				}
 			</ul>
 		</div>
 	</div>
+}

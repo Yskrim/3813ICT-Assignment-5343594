@@ -1,6 +1,22 @@
-export type AdminRequestType = 'ban' | 'deleteGroup' | 'deleteChannel' | 'deleteAccount' | 'kick' | 'report' | 'add-admin' | 'remove-admin';
-
+export type AdminRequestType = 'banUser' | 'deleteGroup' | 'createGroup' | 'deleteChannel' | 'deleteAccount' | 'kickUser' | 'giveAdmin' | 'revokeAdmin' | 'createChannel';
+export type AdminRequestScope = 'super' | 'group'
 export type AdminRequestStatus = 'pending' | 'resolved' | 'rejected' | 'approved';
+
+export const ADMIN_REQUEST_SCOPE: Record<AdminRequestType, AdminRequestScope> = {
+    // super scope
+    banUser: 'super',
+    deleteGroup: 'super',
+    createGroup: 'super',
+    deleteAccount: 'super',
+    giveAdmin: 'super',
+    revokeAdmin: 'super',
+
+    // group scope
+    kickUser: 'group',
+    deleteChannel: 'group',
+    createChannel: 'group',
+}
+
 
 export interface AdminRequest {
     id: string
@@ -12,6 +28,6 @@ export interface AdminRequest {
     note: string
     status: AdminRequestStatus
     createdAt: Date
-    reviewedBy : string | null
-    reviewedAt : Date | null 
+    reviewedBy: string | null
+    reviewedAt: Date | null
 }
