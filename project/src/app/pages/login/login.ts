@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
@@ -22,6 +22,7 @@ export class LoginPage {
 	
 	onSubmit(): void {
 		this.error = '';
+		
 		const ok = this.auth.login();
 		
 		// if (!ok) {

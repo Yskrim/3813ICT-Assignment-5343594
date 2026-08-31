@@ -28,6 +28,17 @@ export class UserService {
         USERS.splice(index, 1);
         return true;
     }
+
+    calculateAge(dob: Date): string {
+        // take the date string
+        const userDob: Date = dob;
+
+        // get today's date string
+        const today: Date = new Date();
+
+        // calculate the difference in full years (num -> string)
+        return (today.getFullYear() - userDob.getFullYear()).toString()
+    }
 }
 
 

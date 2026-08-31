@@ -25,7 +25,7 @@ export class HomePage implements OnInit {
 
     // temporarily, while no AuthService,
     private readonly testUserId = '1';
-    private readonly testGroupIds = ['1', '2', '3', '4']; // после фикса seed возьмёшь из user
+    private readonly testGroupIds = ['1', '2', '3', '4'];
 
     constructor(
         private groupService: GroupService,
@@ -36,6 +36,8 @@ export class HomePage implements OnInit {
 
     // run services on init
     ngOnInit(): void {
+
+        // current user
         const current = this.auth.currentUser();
 		if (!current) {
 			this.router.navigate(['/login']);
