@@ -21,6 +21,7 @@ export const ADMIN_REQUEST_SCOPE: Record<AdminRequestType, AdminRequestScope> = 
 export interface AdminRequest {
     id: string
     type: AdminRequestType // все виды реквеста
+    proposedChannelName?: string  // для createChannel
     issuerId: string // отправитель
     targetUserId?: string // целевой юзер
     targetGroupId?: string // целевая группа

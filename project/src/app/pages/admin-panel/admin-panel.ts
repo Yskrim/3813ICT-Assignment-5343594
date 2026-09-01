@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 
@@ -12,7 +13,7 @@ import { UtilsService } from '../../services/utils.service';
 import { GROUPS } from '../../data/seed.groups';
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, NgTemplateOutlet],
   selector: 'app-admin-panel',
   styleUrl: './admin-panel.css',
   templateUrl: './admin-panel.html',
@@ -70,8 +71,7 @@ export class AdminPanelPage implements OnInit {
     if (this.user.role === "groupAdmin") { this.groups = managedGroups } else { this.groups = GROUPS }
 
     // channels ? super cant access messages on the chats
-    // this.channels = this.groups.flatMap(g => this.channelService.getByGroupId(g.id));
-
+    // this.channels = this.groups.flatMap(g => this.channelService.getByGroupId(g.id)); for the groups he's a reg admin still -- TODO
   }
 
   issuerName(id: string) {
@@ -101,6 +101,8 @@ export class AdminPanelPage implements OnInit {
   reject(req: AdminRequest): void {
     if (!this.user) return;
     this.adminRequestService.updateReqStatus(this.user.id, req.id, 'rejected');
+    this.loadViewData();
+
   }
 
   formatDate(d: Date): string {

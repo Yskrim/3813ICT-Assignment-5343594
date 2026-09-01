@@ -8,75 +8,37 @@
 	</nav>
 
 	<div>
-		<div class="card mb-4">
-			<div class="card-header py-2 fw-semibold bg-primary text-light px-3">
-				User Requests
+		@if (user?.role === 'superAdmin') {
+			<div class="card mb-4">
+				<div class="card-header py-2 fw-semibold bg-primary text-light px-3">
+					Super Admin Requests
+				</div>
+				<ul class="list-group list-group-flush">
+					@for (req of requests.superRequests; track req.id) {
+						<ng-container
+							*ngTemplateOutlet="requestItem; context: { req: req }"
+						/>
+					} @empty {
+						<li class="list-group-item py-3 text-muted">No pending super admin requests.</li>
+					}
+				</ul>
 			</div>
+		}
 
-			<ul class="list-group list-group-flush">
-				@for (req of requests.superRequests; track req.id) {
-					<li class="list-group-item py-3">
-						<div class="d-flex flex-column flex-md-row gap-3">
-							<div class="flex-shrink-0 text-break">
-								<div class="fw-semibold">Request ID: {{ req.id }}</div>
-								<ol>
-									<li class="text-muted small">
-										Sender:
-										<span class="fw-normal">@{{ issuerName(req.issuerId) }}</span>
-									</li>
-									<li class="text-muted small">
-										Role:
-										<span class="fw-normal">{{ issuerRole(req.issuerId) }}</span>
-									</li>
-									<li class="text-muted small">
-										Target:
-										<span class="fw-normal">{{ req.id }}</span>
-									</li>
-									<li class="text-muted small">
-										Request type:
-										<span class="fw-normal">{{ req.type }}</span>
-									</li>
-									<li class="text-muted small">
-										Date:
-										<span class="fw-normal">{{ formatDate(req.createdAt) }}</span>
-									</li>
-								</ol>
-							</div>
-
-							<div
-								class="card p-2 flex-grow-1 border border-1 mb-2 mb-md-0"
-								style="background: #f8f9fa"
-							>
-								<div class="mb-2 text-secondary">
-									<span class="fw-semibold">Reason:</span>
-								</div>
-								<p class="mb-0 small">{{ req.note }}</p>
-							</div>
-
-							<div
-								class="d-flex flex-column gap-1 align-items-end"
-								style="min-width: 110px"
-							>
-								<button
-									class="btn btn-sm btn-outline-success mb-1 w-100"
-									(click)="approve(req)"
-								>
-									Approve
-								</button>
-								<button
-									class="btn btn-sm btn-outline-danger w-100"
-									(click)="reject(req)"
-								>
-									Decline
-								</button>
-							</div>
-						</div>
-					</li>
-				} @empty {
-					<li class="list-group-item py-3 text-muted">No pending requests.</li>
-				}
-			</ul>
-		</div>
+		@if (requests.groupRequests.length > 0) {
+			<div class="card mb-4">
+				<div class="card-header py-2 fw-semibold bg-primary text-light px-3">
+					Group Requests
+				</div>
+				<ul class="list-group list-group-flush">
+					@for (req of requests.groupRequests; track req.id) {
+						<ng-container
+							*ngTemplateOutlet="requestItem; context: { req: req }"
+						/>
+					}
+				</ul>
+			</div>
+		}
 
 		<div class="card">
 			<p class="card-header py-2 fw-semibold bg-primary text-light">Groups</p>
@@ -89,7 +51,7 @@
 							<div>
 								<a
 									[routerLink]="['/groups', group.id]"
-									class="text-decoration-none .bg-light"
+									class="text-decoration-none"
 								>
 									{{ group.name }}
 								</a>
@@ -108,3 +70,83 @@
 		</div>
 	</div>
 }
+
+<ng-template #requestItem let-req="req">
+	<li class="list-group-item py-3">
+		<div class="d-flex flex-column flex-md-row gap-3">
+			<div class="flex-shrink-0 text-break">
+				<div class="fw-semibold">Request ID: {{ req.id }}</div>
+				<ol class="mb-0">
+					<li class="text-muted small">
+						Sender:
+						<span class="fw-normal">{{ issuerName(req.issuerId) }}</span>
+					</li>
+					<li class="text-muted small">
+						Role:
+						<span class="fw-normal">{{ issuerRole(req.issuerId) }}</span>
+					</li>
+					<li class="text-muted small">
+						Type:
+						<span class="fw-normal">{{ req.type }}</span>
+					</li>
+					@if (req.targetGroupId) {
+						<li class="text-muted small">
+							Group:
+							<span class="fw-normal">{{ groupName(req.targetGroupId) }}</span>
+						</li>
+					}
+					@if (req.proposedChannelName) {
+						<li class="text-muted small">
+							Channel name:
+							<span class="fw-normal">{{ req.proposedChannelName }}</span>
+						</li>
+					}
+					@if (req.targetChannelId) {
+						<li class="text-muted small">
+							Channel:
+							<span class="fw-normal">{{ channelName(req.targetChannelId) }}</span>
+						</li>
+					}
+					@if (req.targetUserId) {
+						<li class="text-muted small">
+							User:
+							<span class="fw-normal">{{ issuerName(req.targetUserId) }}</span>
+						</li>
+					}
+					<li class="text-muted small">
+						Date:
+						<span class="fw-normal">{{ formatDate(req.createdAt) }}</span>
+					</li>
+				</ol>
+			</div>
+
+			<div
+				class="card p-2 flex-grow-1 border border-1 mb-2 mb-md-0"
+				style="background: #f8f9fa"
+			>
+				<div class="mb-2 text-secondary">
+					<span class="fw-semibold">Reason:</span>
+				</div>
+				<p class="mb-0 small">{{ req.note }}</p>
+			</div>
+
+			<div
+				class="d-flex flex-column gap-1 align-items-end"
+				style="min-width: 110px"
+			>
+				<button
+					class="btn btn-sm btn-outline-success mb-1 w-100"
+					(click)="approve(req)"
+				>
+					Approve
+				</button>
+				<button
+					class="btn btn-sm btn-outline-danger w-100"
+					(click)="reject(req)"
+				>
+					Reject
+				</button>
+			</div>
+		</div>
+	</li>
+</ng-template>
