@@ -4,6 +4,8 @@ const app = express();
 const http = require("http").Server(app);
 
 const corsOptions = {
+    origin: 'http://localhost:4200',
+    credentials: true,
     origin(origin, callback) {
         if (!origin) {
             callback(null, true);
@@ -19,3 +21,7 @@ const io = require("socket.io")(http, {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+app.use('/api', require('./routes'));
+
+require('./listen').server(http);

@@ -9,15 +9,25 @@ import { UserProfileSettings } from './pages/user-profile-settings/user-profile-
 import { AdminPanelPage } from './pages/admin-panel/admin-panel';
 import { GroupPage } from './pages/group/group';
 
+import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest.guard';
+import { roleGuard } from './guards/role.guard';
+
 export const routes: Routes = [
     { path: '', redirectTo: 'home', pathMatch: 'full' },
-    { path: 'home', component: HomePage },
-    { path: 'groups/:gId/channels/:cId', component: ChannelPage },
-    { path: 'groups/:gId/channels/:cId/info', component: ChannelInfo },
-    { path: 'groups/:gId', component: GroupPage },
-    { path: 'groups/:gId/info', component: GroupInfo },
-    { path: 'user-profile', component: UserProfile },
-    { path: 'user-profile-settings', component: UserProfileSettings },
-    { path: 'login', component: LoginPage },
-    { path: 'admin-panel', component: AdminPanelPage },
+    
+    // public
+    { path: 'login', component: LoginPage, canActivate: [guestGuard] },
+    
+    // auth only
+    { path: 'home', component: HomePage, canActivate: [authGuard] },
+    { path: 'groups/:gId/channels/:cId', component: ChannelPage, canActivate: [authGuard] },
+    { path: 'groups/:gId/channels/:cId/info', component: ChannelInfo, canActivate: [authGuard] },
+    { path: 'groups/:gId', component: GroupPage, canActivate: [authGuard] },
+    { path: 'groups/:gId/info', component: GroupInfo, canActivate: [authGuard] },
+    { path: 'user-profile', component: UserProfile, canActivate: [authGuard] },
+    { path: 'user-profile-settings', component: UserProfileSettings, canActivate: [authGuard] },
+    
+    // auth + role
+    { path: 'admin-panel', component: AdminPanelPage, canActivate: [authGuard, roleGuard('groupAdmin', 'superAdmin')] },
 ];

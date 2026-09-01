@@ -17,15 +17,6 @@ export class HomePage implements OnInit {
     groups: Group[] = [];
 
     channelsByGroup = new Map<string, Channel[]>();
-    // mapStructure = [ 
-    //  { groupId : ch1 }, 
-    //  { groupId : ch2 }, 
-    //  { groupId : ch3 } 
-    //]
-
-    // temporarily, while no AuthService,
-    private readonly testUserId = '1';
-    private readonly testGroupIds = ['1', '2', '3', '4'];
 
     constructor(
         private groupService: GroupService,
