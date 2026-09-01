@@ -1,80 +1,92 @@
 import { Injectable } from '@angular/core';
-
-import { ADMIN_REQUESTS } from '../data/seed.adminRequests';
+import { HttpClient } from '@angular/common/http';
 import { AdminRequest, AdminRequestStatus, User } from '../models';
 import { ADMIN_REQUEST_SCOPE } from '../models';
-import { GROUPS } from '../data/seed.groups';
 import { ChannelService } from './channel.service';
-
+import { GroupService } from './group.service';
+import { Observable, map, of, switchMap } from 'rxjs';
+import { apiURL } from '../app.config';
 
 @Injectable({ providedIn: 'root' })
-
 export class AdminRequestService {
-    constructor(private channelService: ChannelService) {}
+    private readonly requestsUrl = `${apiURL}/admin-requests`;
 
-    getPanelView(user: User) {
-        const managedGroupsIds = GROUPS
-            .filter(g => g.adminIds.includes(user.id))
-            .map(g => g.id);
+    constructor(
+        private http: HttpClient,
+        private channelService: ChannelService,
+        private groupService: GroupService,
+    ) { }
 
-        let groupRequests: AdminRequest[] = [];
-        let superRequests: AdminRequest[] = [];
+    getAdminRequests(user: User): Observable<{ groupRequests: AdminRequest[]; superRequests: AdminRequest[] }> {
+        return this.groupService.getGroupsForUser(user.id).pipe(
+            switchMap((groups) =>
+                this.http.get<AdminRequest[]>(this.requestsUrl).pipe(
+                    map((requests) => {
+                        const managedGroupsIds = groups
+                            .filter((g) => g.adminIds?.includes(user.id))
+                            .map((g) => g.id);
 
-        if (managedGroupsIds.length > 0) {
-            groupRequests = ADMIN_REQUESTS.filter(r =>
-                r.status === 'pending' &&
-                ADMIN_REQUEST_SCOPE[r.type] === 'group' &&
-                r.targetGroupId != null &&
-                managedGroupsIds.includes(r.targetGroupId),
-            );
-        }
+                        const groupRequests = managedGroupsIds.length
+                            ? requests.filter(
+                                (r) =>
+                                    r.status === 'pending' &&
+                                    ADMIN_REQUEST_SCOPE[r.type] === 'group' &&
+                                    r.targetGroupId != null &&
+                                    managedGroupsIds.includes(r.targetGroupId),
+                            )
+                            : [];
 
-        if (user.role === 'superAdmin') {
-            superRequests = ADMIN_REQUESTS.filter(r =>
-                r.status === 'pending' &&
-                ADMIN_REQUEST_SCOPE[r.type] === 'super',
-            );
-        }
+                        const superRequests =
+                            user.role === 'superAdmin'
+                                ? requests.filter(
+                                    (r) =>
+                                        r.status === 'pending' &&
+                                        ADMIN_REQUEST_SCOPE[r.type] === 'super',
+                                )
+                                : [];
 
-        return { groupRequests, superRequests };
+                        return { groupRequests, superRequests };
+                    }),
+                ),
+            ),
+        );
     }
 
-
-    getPending(requests: AdminRequest[]): AdminRequest[] {
-        return requests.filter(r => r.status === 'pending')
-    }
-
-    approve(adminId: string, id: string): AdminRequest | undefined {
+    approve(adminId: string, id: string): Observable<AdminRequest | undefined> {
         return this.updateReqStatus(adminId, id, 'approved');
     }
-    reject(adminId: string, id: string): AdminRequest | undefined {
+
+    reject(adminId: string, id: string): Observable<AdminRequest | undefined> {
         return this.updateReqStatus(adminId, id, 'rejected');
     }
-    
+
     updateReqStatus(
         adminId: string,
         id: string,
         status: AdminRequestStatus,
-    ): AdminRequest | undefined {
-        const index = ADMIN_REQUESTS.findIndex(r => r.id === id);
-        if (index === -1) return undefined;
+    ): Observable<AdminRequest | undefined> {
+        return this.http.get<AdminRequest>(`${this.requestsUrl}/${id}`).pipe(
+            switchMap((request) => {
+                if (!request || request.status !== 'pending') return of(undefined);
 
-        const request = ADMIN_REQUESTS[index];
-        if (request.status !== 'pending') return undefined;
+                const updatedRequest: AdminRequest = {
+                    ...request,
+                    status,
+                    reviewedBy: adminId,
+                    reviewedAt: new Date(),
+                };
 
-        if (status === 'approved' && request.type === 'createChannel') {
-            this.channelService.createFromRequest(request);
-        }
+                const createChannel$ =
+                    status === 'approved' && request.type === 'createChannel'
+                        ? this.channelService.createFromRequest(request)
+                        : of(undefined);
 
-        ADMIN_REQUESTS[index] = {
-            ...request,
-            status,
-            reviewedBy: adminId,
-            reviewedAt: new Date(),
-        };
-
-        return ADMIN_REQUESTS[index];
+                return createChannel$.pipe(
+                    switchMap(() =>
+                        this.http.put<AdminRequest>(`${this.requestsUrl}/${id}`, updatedRequest),
+                    ),
+                );
+            }),
+        );
     }
 }
-
-

@@ -1,0 +1,86 @@
+[
+    {
+        "id": "ar-1",
+        "issuerId": "3",
+        "targetGroupId": "1",
+        "targetChannelId": "2",
+        "type": "giveAdmin",
+        "status": "pending",
+        "createdAt": "2026-08-29T10:25:00.000Z",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "note": "Bob would like to help manage Docs channel."
+    },
+    {
+        "id": "ar-2",
+        "issuerId": "4",
+        "targetGroupId": "2",
+        "targetChannelId": "5",
+        "type": "revokeAdmin",
+        "status": "approved",
+        "createdAt": "2026-08-25T18:10:00.000Z",
+        "reviewedBy": "1",
+        "reviewedAt": "2026-08-26T09:00:00.000Z",
+        "note": "Diane wants to delegate admin rights."
+    },
+    {
+        "id": "ar-3",
+        "issuerId": "2",
+        "targetGroupId": "4",
+        "targetChannelId": "4",
+        "type": "giveAdmin",
+        "status": "rejected",
+        "createdAt": "2026-08-20T15:33:00.000Z",
+        "reviewedBy": "1",
+        "reviewedAt": "2026-08-21T12:14:00.000Z",
+        "note": "Alice requested admin, but already had it."
+    },
+    {
+        "id": "ar-4",
+        "issuerId": "3",
+        "targetGroupId": "3",
+        "type": "createChannel",
+        "proposedChannelName": "Scrims",
+        "status": "pending",
+        "createdAt": "2026-08-30T07:22:00.000Z",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "note": "Channel for organising scrim sessions."
+    },
+    {
+        "id": "ar-5",
+        "issuerId": "3",
+        "targetGroupId": "1",
+        "type": "createChannel",
+        "proposedChannelName": "Workshop",
+        "status": "pending",
+        "createdAt": "2026-08-31T10:00:00.000Z",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "note": "Channel for workshop updates."
+    },
+    {
+        "id": "ar-6",
+        "issuerId": "2",
+        "targetGroupId": "1",
+        "targetUserId": "3",
+        "type": "kickUser",
+        "status": "pending",
+        "createdAt": "2026-08-31T11:00:00.000Z",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "note": "Bob keeps spamming off-topic messages in Discussions."
+    },
+    {
+        "id": "ar-7",
+        "issuerId": "1",
+        "targetGroupId": "1",
+        "targetChannelId": "3",
+        "type": "deleteChannel",
+        "status": "pending",
+        "createdAt": "2026-08-31T12:00:00.000Z",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "note": "Assignment-1 channel is no longer needed after submission."
+    }
+]

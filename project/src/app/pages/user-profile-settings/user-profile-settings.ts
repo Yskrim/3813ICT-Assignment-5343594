@@ -41,46 +41,59 @@ export class UserProfileSettings implements OnInit {
     if (!this.user) return;
     this.displayName = this.user.displayName;
     this.username = this.user.username;
-    this.password = this.user.password;
-    this.avatarUrl = this.user.avatarUrl ?? '';
+    this.password = this.user.password ?? ''; // if not empty
+    this.avatarUrl = this.user.avatarUrl ?? ''; // if not empty
     this.dateOfBirth = this.formatDate(this.user.dateOfBirth);
   }
 
   private formatDate(d: Date | string): string {
     const date = d instanceof Date ? d : new Date(d);
-    return date.toISOString().slice(0, 10); // yyyy-mm-dd
+    return date.toISOString().slice(0, 10);
+  }
+
+  // apply saved changes
+  private applyUpdatedUser(user: User | undefined): void {
+    if (!user) return;
+    
+    this.user = user; // apply to current session
+    this.auth.currentUser.set(user); // pass to auth
+    localStorage.setItem('currentUser', JSON.stringify(user)); // save to storage
+    this.loadFormFromUser();
   }
 
   saveDisplayName(): void {
     if (!this.user) return;
-    this.user = this.userService.updateUser(this.user.id, { displayName: this.displayName });
-    this.auth.currentUser.set(this.user!);
+    this.userService
+      .updateUser(this.user.id, { displayName: this.displayName })
+      .subscribe((user) => this.applyUpdatedUser(user)); // sub for possible new changes
   }
 
   saveUsername(): void {
     if (!this.user) return;
-    this.user = this.userService.updateUser(this.user.id, { username: this.username });
-    this.auth.currentUser.set(this.user!);
+    this.userService
+      .updateUser(this.user.id, { username: this.username })
+      .subscribe((user) => this.applyUpdatedUser(user)); // sub for possible new changes
   }
 
   savePassword(): void {
     if (!this.user) return;
-    this.user = this.userService.updateUser(this.user.id, { password: this.password });
-    this.auth.currentUser.set(this.user!);
+    this.userService
+      .updateUser(this.user.id, { password: this.password })
+      .subscribe((user) => this.applyUpdatedUser(user)); // sub for possible new changes
   }
 
   saveAvatar(): void {
     if (!this.user) return;
-    this.user = this.userService.updateUser(this.user.id, { avatarUrl: this.avatarUrl });
-    this.auth.currentUser.set(this.user!);
+    this.userService
+      .updateUser(this.user.id, { avatarUrl: this.avatarUrl })
+      .subscribe((user) => this.applyUpdatedUser(user)); // sub for possible new changes
   }
 
   saveDateOfBirth(): void {
     if (!this.user) return;
-    this.user = this.userService.updateUser(this.user.id, {
-      dateOfBirth: new Date(this.dateOfBirth),
-    });
-    this.auth.currentUser.set(this.user!);
+    this.userService
+      .updateUser(this.user.id, { dateOfBirth: this.dateOfBirth })
+      .subscribe((user) => this.applyUpdatedUser(user)); // sub for possible new changes
   }
 
   deleteAccount(): void {
@@ -91,9 +104,12 @@ export class UserProfileSettings implements OnInit {
       alert('SuperAdmin cannot delete account');
       return;
     }
-    this.userService.deleteUser(this.user.id);
-    this.auth.logout();
-    this.router.navigate(['/login']);
+
+    this.userService.deleteUser(this.user.id).subscribe((deleted) => {
+      if (!deleted) return; // cancel deletion
+      this.auth.logout();
+      this.router.navigate(['/login']);
+    });
   }
 
   logout(): void {

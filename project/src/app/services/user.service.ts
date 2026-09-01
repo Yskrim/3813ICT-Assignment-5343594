@@ -1,49 +1,60 @@
+import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { User } from '../models';
-import { USERS } from '../data/seed';
-import { Injectable } from '@angular/core';
+import { apiURL } from '../app.config';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 
 export class UserService {
-    // find a userx
-    getByUserId(id: string): User | undefined {
-        return USERS.find(u => u.id === id);
+    user: User | null;
+
+    constructor(
+        private http: HttpClient,
+        private auth: AuthService
+    ) {
+        this.user = this.auth.currentUser()
     }
 
-    // find list of users
-    getMembers(ids: string): User[] {
-        return USERS.filter(u => ids.includes(u.id));
+    // Get user by id (returns Observable, typically preferred for HTTP operations)
+    getByUserId(userId: string): Observable<User | undefined> {
+        const url = `${apiURL}/users/${userId}`;
+        return this.http.get<User>(url).pipe(
+            map(user => user),
+            catchError(() => of(undefined)),
+        );
     }
 
-    getByIdsList(ids: string[]): User[] {
-        return USERS.filter(u => ids.includes(u.id))
+    
+    getByIdsList(ids: string[]): Observable<User[]> {
+        if (!ids.length) return of([]);
+        return this.http.get<User[]>(`${apiURL}/users`).pipe(
+            map(users => users.filter(u => ids.includes(u.id))),
+            catchError(() => of([])),
+        );
     }
 
-    updateUser(id: string, changes: Partial<User>): User | undefined {
-        const index = USERS.findIndex(u => u.id === id);
-        if (index === -1) return undefined;
-        USERS[index] = { ...USERS[index], ...changes };
-        return USERS[index];
+    // Update user fields
+    updateUser(id: string, changes: Partial<User>): Observable<User | undefined> {
+        return this.http.put<User>(`${apiURL}/users/${id}`, changes).pipe(
+            map(user => user),
+            catchError(() => of(undefined)),
+        );
     }
 
-    deleteUser(id: string): boolean {
-        const index = USERS.findIndex(u => u.id === id);
-        if (index === -1) return false;
-        USERS.splice(index, 1);
-        return true;
+    // Delete a user by id
+    deleteUser(id: string): Observable<boolean> {
+        return this.http.delete(`${apiURL}/users/${id}`).pipe(
+            map(() => true),
+            catchError(() => of(false)),
+        );
     }
 
-    calculateAge(dob: Date): string {
-        // take the date string
-        const userDob: Date = dob;
-
-        // get today's date string
-        const today: Date = new Date();
-
-        // calculate the difference in full years (num -> string)
-        return (today.getFullYear() - userDob.getFullYear()).toString()
+    // Calculate user's age
+    calculateAge(dob: Date | string): string {
+        const userDob = dob instanceof Date ? dob : new Date(dob);
+        const today = new Date();
+        return (today.getFullYear() - userDob.getFullYear()).toString();
     }
 }
-
-
-

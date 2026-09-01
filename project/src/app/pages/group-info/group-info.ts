@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink} from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
 import { Group, Channel, User } from '../../models';
 import { GroupService } from '../../services/group.service';
@@ -15,9 +15,11 @@ import { UserService } from '../../services/user.service';
 
 export class GroupInfo implements OnInit {
   gId = '';
+  uId = '';
   group: Group | undefined;
   channels: Channel[] = [];
   members: User[] = [];
+  loading = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -29,9 +31,44 @@ export class GroupInfo implements OnInit {
 
   ngOnInit(): void {
     this.gId = this.route.snapshot.paramMap.get('gId')!;
-    this.group = this.groupService.getByGroupId(this.gId);
-    this.channels = this.channelService.getByGroupId(this.gId);
-    this.members = this.userService.getMembers(this.gId);
+    this.uId = this.route.snapshot.parent?.paramMap.get('userId')!;
+
+    // Fetch group info first
+    this.groupService
+      .getByGroupId(this.uId, this.gId)
+      .subscribe({ next: (group) => {
+          this.group = group;
+          if (!group) {
+            this.loading = false;
+            return;
+          }
+
+          // Fetch channels for the group
+          this.channelService.getByGroupId( this.uId, this.gId
+          ).subscribe({
+            next: (channels) => {
+              this.channels = channels;
+
+              // Fetch members for the group
+              this.userService.getByIdsList(group.memberIds || []).subscribe({
+                next: (members) => {
+                  this.members = members;
+                  this.loading = false;
+                },
+                error: () => {
+                  this.loading = false;
+                }
+              });
+            },
+            error: () => {
+              this.loading = false;
+            }
+          });
+        },
+        error: () => {
+          this.loading = false;
+        }
+      });
   }
 
   goBack(): void {

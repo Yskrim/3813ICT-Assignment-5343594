@@ -2,8 +2,8 @@
 
 <div class="card p-4">
 	<div class="mb-4">
-		<h6 class="text-muted">{{ group?.name || 'Channel' }}</h6>
-		<h4 class="text-muted">{{ channel?.name || 'Channel' }}</h4>
+		<h6 class="text-muted">{{ group()?.name || 'Channel' }}/</h6>
+		<h4 class="text-muted pb-3 pt-1">{{ channel()?.name || 'Channel' }}</h4>
 		<!-- <h4 class="mb-4">{{ channel?.description || 'No description' }}</h4> -->
 		<div class="d-flex gap-2">
 			<button class="btn btn-sm btn-primary" (click)="goBack()">Go back</button>
@@ -18,7 +18,7 @@
 		<div>
 			<div class="mb-2 fw-bold">People</div>
 			<ul class="list-group">
-				@for (member of members; track member.id) {
+				@for (member of members(); track member.id) {
 					<li class="list-group-item">
 						<div
 							class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
@@ -29,7 +29,7 @@
 									class="fw-semibold"
 									>{{ member.displayName }}</a
 								>
-								<div class="text-muted">@{{ member.username }}</div>
+								<div class="text-muted">{{ member.username }}</div>
 								<div class="text-muted">Role: {{ member.role }}</div>
 							</div>
 							<div class="d-flex gap-2">

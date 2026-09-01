@@ -4,7 +4,14 @@
 	<div class="card">
 		<p class="card-header py-2 fw-semibold bg-primary text-light">myGroups</p>
 		<ul class="list-group list-group-flush">
-			@for (group of groups; track group.id) {
+			<!-- 
+				Проверьте, правильно ли работает цикл. 
+				@for -- это блок-синтаксис Angular 17+ (control flow). 
+				Если проект на Angular < 17, используйте *ngFor!
+				Пример для старого синтаксиса:
+				<li *ngFor="let group of groups; trackBy: trackByGroupId" ... >
+			-->
+			@for (group of groups(); track group.id) {
 				<li class="list-group-item list-group-item-action p-0">
 					<div
 						class="group-heading px-3 py-2 d-flex justify-content-between align-items-center"
@@ -13,13 +20,15 @@
 							<span>Group :</span>
 							<a
 								[routerLink]="['/groups', group.id]"
-								class="text-decoration-none .bg-light"
+								class="text-decoration-none bg-light"
 							>
 								{{ group.name }}
 							</a>
 							<small class="text-muted ms-1">GroupId: {{ group.id }}</small>
 						</div>
-						<button [routerLink]="['/groups', group.id]" class="btn btn-sm btn-light">Open</button>
+						<button [routerLink]="['/groups', group.id]" class="btn btn-sm btn-light">
+							Open
+						</button>
 					</div>
 				</li>
 			}
@@ -31,12 +40,12 @@
 	<div class="card">
 		<div class="card-header py-2 fw-semibold bg-primary text-light">myChannels</div>
 		<ul class="list-group list-group-flush">
-			@for (group of groups; track group.id) {
+			@for (group of groups(); track group.id) {
 				<li class="list-group-item list-group-item-action p-0">
 					<div class="group-heading px-3 py-2 fw-bold bg-light">{{ group.name }}</div>
 
 					<ul class="list-group list-group-flush">
-						@for (ch of channelsByGroup.get(group.id) ?? []; track ch.id) {
+						@for (ch of channelsByGroup()[group.id] ?? []; track ch.id) {
 							<li class="list-group-item list-group-item-action py-1">
 								<div class="ps-4 d-flex justify-content-between align-items-center">
 									<a
@@ -45,10 +54,17 @@
 									>
 										Channel : {{ ch.name }}
 									</a>
-									<button [routerLink]="['/groups', group.id, 'channels', ch.id]" class="btn btn-sm btn-light">
+									<button
+										[routerLink]="['/groups', group.id, 'channels', ch.id]"
+										class="btn btn-sm btn-light"
+									>
 										Read
 									</button>
 								</div>
+							</li>
+						} @empty {
+							<li class="list-group-item text-muted small">
+								No channels in this group.
 							</li>
 						}
 					</ul>

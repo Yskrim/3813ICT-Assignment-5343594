@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Location } from '@angular/common';
 import { Channel, Group, User } from '../../models';
 import { ChannelService } from '../../services/channel.service';
@@ -14,11 +15,13 @@ import { GroupService } from '../../services/group.service';
 })
 
 export class ChannelInfo implements OnInit {
+  uId = '';
   gId = '';
   cId = '';
-  group: Group | undefined;
-  channel: Channel | undefined;
-  members: User[] = [];
+  group = signal<Group | undefined>(undefined);
+  channel = signal<Channel | undefined>(undefined);
+  members = signal<User[]>([]);
+
 
   constructor(
     private route: ActivatedRoute,
@@ -28,22 +31,39 @@ export class ChannelInfo implements OnInit {
     private location: Location,
   ) { }
 
+  goBack(): void {
+    this.location.back();
+  }
+
   ngOnInit(): void {
     this.gId = this.route.snapshot.paramMap.get('gId')!;
     this.cId = this.route.snapshot.paramMap.get('cId')!;
-    this.group = this.groupService.getByGroupId(this.gId);
-    this.channel = this.channelService.getByChannelId(this.cId);
-    this.members = this.channel
-      ? this.userService.getByIdsList(this.channel.memberIds)
-      : [];
+    this.uId = this.route.snapshot.parent?.paramMap.get('userId') || '';
 
-    console.log('gId', this.gId)
-    console.log('cId', this.cId)
-    console.log('channel', this.channel)
-    console.log('members', this.members)
-  }
-
-  goBack(): void {
-    this.location.back();
+    forkJoin([
+      this.groupService.getByGroupId(this.uId, this.gId),
+      this.channelService.getByChannelId(this.cId),
+    ]).subscribe({
+      next: ([group, channel]) => {
+        this.group.set(group);
+        this.channel.set(channel);
+        if (channel && channel.memberIds) {
+   
+          this.userService.getByIdsList(channel.memberIds).subscribe({
+     
+            next: (members) => {
+              this.members.set(members);
+            },
+            error: () => {
+              this.members.set([]);
+            }
+          });
+        } else {
+          this.members.set([]);
+        }
+      },
+      error: () => {
+      },
+    });
   }
 }

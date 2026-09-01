@@ -30,15 +30,19 @@ export class MessageService {
         MESSAGES.push(message)
         return message
     }
-    // delete a message from the list -- TODO
 
+    // delete a message from the list
     deleteMessage(channelId: string, senderId: string, messageId: string): boolean {
-        const index = MESSAGES.findIndex(m => m.id === messageId && m.chatId === channelId);
+        const index = MESSAGES.findIndex(
+            (m) => m.id === messageId && m.chatId === channelId,
+        );
+        if (index === -1) return false;
+        if (MESSAGES[index].senderId !== senderId) return false;
 
-        if (MESSAGES[index].senderId !== senderId) { return false }
-        MESSAGES.splice(index, 1)
-        return true
+        MESSAGES.splice(index, 1);
+        return true;
     }
+    
     // update a message on the list -- TODO
 }
 

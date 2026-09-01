@@ -14,6 +14,7 @@ export class LoginPage {
 	username = '';
 	password = '';
 	error = '';
+	loading = false;
 
 	form = new FormGroup({
 		username: new FormControl('', Validators.required),
@@ -27,16 +28,23 @@ export class LoginPage {
 
 	onSubmit(): void {
 		this.error = '';
+		this.loading = true;
 
-		const ok = this.auth.login(this.username, this.password);
-
-		if (!ok) {
-			alert('Invalid creds')
-			this.form.reset();
-			return
-		}
-
-
-		this.router.navigate(['/home']);
+		this.auth.login(this.username, this.password).subscribe({
+			next: (user) => {
+				this.loading = false;
+				if (!user) {
+					this.error = 'Invalid credentials';
+					this.form.reset();
+					return;
+				}
+				this.router.navigate(['/home']);
+			},
+			error: () => {
+				this.loading = false;
+				this.error = 'Invalid credentials';
+				this.form.reset();
+			},
+		});
 	}
 }

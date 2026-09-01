@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Group, Channel } from '../../models';
+import { Group, Channel, User } from '../../models';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
-import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -14,37 +13,36 @@ import { AuthService } from '../../services/auth.service';
 })
 
 export class HomePage implements OnInit {
-    groups: Group[] = [];
-
-    channelsByGroup = new Map<string, Channel[]>();
+    groups = signal<Group[]>([]);
+    channelsByGroup = signal<Record<string, Channel[]>>({});
 
     constructor(
         private groupService: GroupService,
         private channelService: ChannelService,
         private auth: AuthService,
-		private router: Router,
     ) { }
 
-    // run services on init
     ngOnInit(): void {
+        const user = this.auth.currentUser()!;
 
-        // current user
-        const current = this.auth.currentUser();
-		if (!current) {
-			this.router.navigate(['/login']);
-			return;
-		}
+        // get groups
+        this.groupService.getGroupsForUser(user.id).subscribe(groups => {
+            this.groups.set(groups);
+            console.log('groups length:', groups.length);
+            // For each group, fetch its channels and put in the map
+            this.channelsByGroup.set({});
 
-        // get user groups
-        this.groups = this.groupService.getGroupsForUser(current.id, current.groupIds);
-        
-        // get each channel for each group
-        for (const group of this.groups) {
-            this.channelsByGroup.set(
-                group.id,
-                this.channelService.getByGroupId(group.id),
-            );
-        }
+            groups.forEach(group => {
+                this.channelService.getByGroupId(user.id, group.id).subscribe((channels: Channel[]) => {
+                    this.channelsByGroup.update(current => ({
+                        ...current,
+                        [group.id]: channels,
+                    }));
+                });
+            });
+        });
+
+        console.log("groups:", this.groups);
+        console.log("channels:", this.channelsByGroup);
     }
 }
-

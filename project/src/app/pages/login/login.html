@@ -15,6 +15,13 @@
 			type="password"
 			[(ngModel)]="password"
 		/>
-		<button class="btn btn-primary w-100" type="submit">Log in</button>
+		
+    <button class="btn btn-primary w-100" type="submit" [disabled]="loading">
+			{{ loading ? 'Logging in...' : 'Log in' }}
+		</button>
+		
+    @if (error) {
+			<p class="text-danger mt-2 mb-0">{{ error }}</p>
+		}
 	</form>
 </div>

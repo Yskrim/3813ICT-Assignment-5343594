@@ -14,7 +14,7 @@
 					Super Admin Requests
 				</div>
 				<ul class="list-group list-group-flush">
-					@for (req of requests.superRequests; track req.id) {
+					@for (req of requests().superRequests; track req.id) {
 						<ng-container
 							*ngTemplateOutlet="requestItem; context: { req: req }"
 						/>
@@ -25,13 +25,13 @@
 			</div>
 		}
 
-		@if (requests.groupRequests.length > 0) {
+		@if (requests().groupRequests.length > 0) {
 			<div class="card mb-4">
 				<div class="card-header py-2 fw-semibold bg-primary text-light px-3">
 					Group Requests
 				</div>
 				<ul class="list-group list-group-flush">
-					@for (req of requests.groupRequests; track req.id) {
+					@for (req of requests().groupRequests; track req.id) {
 						<ng-container
 							*ngTemplateOutlet="requestItem; context: { req: req }"
 						/>
@@ -43,7 +43,7 @@
 		<div class="card">
 			<p class="card-header py-2 fw-semibold bg-primary text-light">Groups</p>
 			<ul class="list-group list-group-flush">
-				@for (group of groups; track group.id) {
+				@for (group of groups(); track group.id) {
 					<li class="list-group-item list-group-item-action p-0">
 						<div
 							class="group-heading px-3 py-2 d-flex justify-content-between align-items-center"
@@ -79,11 +79,11 @@
 				<ol class="mb-0">
 					<li class="text-muted small">
 						Sender:
-						<span class="fw-normal">{{ issuerName(req.issuerId) }}</span>
+						<span class="fw-normal">{{ req.issuerId }}</span>
 					</li>
 					<li class="text-muted small">
 						Role:
-						<span class="fw-normal">{{ issuerRole(req.issuerId) }}</span>
+						<span class="fw-normal">{{ req.issuerId }}</span>
 					</li>
 					<li class="text-muted small">
 						Type:
@@ -92,7 +92,7 @@
 					@if (req.targetGroupId) {
 						<li class="text-muted small">
 							Group:
-							<span class="fw-normal">{{ groupName(req.targetGroupId) }}</span>
+							<span class="fw-normal">{{ req.targetGroupId }}</span>
 						</li>
 					}
 					@if (req.proposedChannelName) {
@@ -104,13 +104,13 @@
 					@if (req.targetChannelId) {
 						<li class="text-muted small">
 							Channel:
-							<span class="fw-normal">{{ channelName(req.targetChannelId) }}</span>
+							<span class="fw-normal">{{ req.targetChannelId }}</span>
 						</li>
 					}
 					@if (req.targetUserId) {
 						<li class="text-muted small">
 							User:
-							<span class="fw-normal">{{ issuerName(req.targetUserId) }}</span>
+							<span class="fw-normal">{{ req.targetUserId }}</span>
 						</li>
 					}
 					<li class="text-muted small">
@@ -121,8 +121,7 @@
 			</div>
 
 			<div
-				class="card p-2 flex-grow-1 border border-1 mb-2 mb-md-0"
-				style="background: #f8f9fa"
+				class="card p-2 flex-grow-1 border border-1 bg-light mb-2 mb-md-0"
 			>
 				<div class="mb-2 text-secondary">
 					<span class="fw-semibold">Reason:</span>

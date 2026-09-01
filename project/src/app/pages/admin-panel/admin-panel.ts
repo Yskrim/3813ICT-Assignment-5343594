@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
+import { forkJoin, map } from 'rxjs';
 
 import { User, AdminRequest, Group, Channel } from '../../models';
 
@@ -10,7 +11,6 @@ import { ChannelService } from '../../services/channel.service';
 import { GroupService } from '../../services/group.service';
 import { AdminRequestService } from '../../services/admin-request.service';
 import { UtilsService } from '../../services/utils.service';
-import { GROUPS } from '../../data/seed.groups';
 
 @Component({
   imports: [RouterLink, NgTemplateOutlet],
@@ -21,13 +21,13 @@ import { GROUPS } from '../../data/seed.groups';
 
 
 export class AdminPanelPage implements OnInit {
-  user: User | undefined;
-  requests: { groupRequests: AdminRequest[], superRequests: AdminRequest[] } = {
+  user!: User;
+  requests = signal<{ groupRequests: AdminRequest[]; superRequests: AdminRequest[] }>({
     groupRequests: [],
     superRequests: []
-  };
-  groups: Group[] = [];
-  channelsByGroup = new Map<string, Channel[]>();
+  });
+  groups = signal<Group[]>([]);
+  channelsByGroup = signal<Record<string, Channel[]>>({});
 
   constructor(
     private auth: AuthService,
@@ -46,6 +46,7 @@ export class AdminPanelPage implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+    this.user = currentUser;
 
     // get requests
     if (currentUser.role === 'user') {
@@ -53,56 +54,108 @@ export class AdminPanelPage implements OnInit {
       return;
     }
 
-    this.user = currentUser;
-    this.loadViewData();
-    console.log(this.user)
-    console.log(this.requests)
-    console.log(this.groups)
+    // Load required data from server using up-to-date service methods
+    forkJoin([
+      this.userService.getByUserId(this.user.id), // loads current user data
+      this.groupService.getGroupsForUser(this.user.id), // loads groups the user is in
+
+    ]).subscribe({
+      next: ([user, groups]) => {
+
+        // Set groups in local state
+        this.groups.set(groups);
+
+        // Clear current channel map
+        this.channelsByGroup.set({});
+
+        // If the user is not a member of any groups, immediately load admin requests
+        if (groups.length === 0) {
+          this.loadAdminRequests();
+          return;
+        }
+
+        // Fetch channels for each group and build a Map<string, Channel[]>
+        forkJoin(
+          this.groups().map((group: Group) =>
+     
+            this.channelService.getByGroupId(this.user!.id, group.id)
+          ),
+        ).subscribe({
+          next: () => {
+            this.loadAdminRequests();
+          },
+        });
+      },
+    });
   }
 
-  loadViewData(): void {
+  loadAdminRequests(): void {
     if (!this.user) return;
 
     //get requests
-    this.requests = this.adminRequestService.getPanelView(this.user);
-
-    //get groups
-    const managedGroups = GROUPS.filter(g => g.adminIds.includes(this.user!.id));
-    if (this.user.role === "groupAdmin") { this.groups = managedGroups } else { this.groups = GROUPS }
-
-    // channels ? super cant access messages on the chats
-    // this.channels = this.groups.flatMap(g => this.channelService.getByGroupId(g.id)); for the groups he's a reg admin still -- TODO
+    // subscribe to the observable and assign result to this.requests when loaded.
+    this.adminRequestService.getAdminRequests(this.user).subscribe({
+      next: (result) => {
+        this.requests.set(result);
+      },
+      error: () => {
+        this.requests.set({ groupRequests: [], superRequests: [] });
+   
+      }
+    });
   }
 
-  issuerName(id: string) {
-    return this.userService.getByUserId(id)?.username ?? id;
+  // fetch user data to fill request cards
+  private loadUsersForRequests(result: {
+    groupRequests: AdminRequest[];
+    superRequests: AdminRequest[];
+  }): void {
+    // make a set for id's
+    const ids = new Set<string>();
+
+    // fill id list with any issuers + targets
+    for (const req of [...result.groupRequests, ...result.superRequests]) {
+      ids.add(req.issuerId);
+      if (req.targetUserId) ids.add(req.targetUserId);
+    }
+    if (ids.size === 0) return;
+
+
   }
 
-  issuerRole(id: string) {
-    return this.userService.getByUserId(id)?.role ?? 'user-role-unknown';
+  // Skip loading other user
+
+  issuerName(id: string): string {
+    return id;
+  }
+
+  issuerRole(id: string): string {
+    return 'user-role-unknown';
   }
 
   groupName(id?: string): string {
-    if (!id) return 'group-name-unknown';
-    return this.groupService.getByGroupId(id)?.name ?? id;
+    return this.groups().find((g) => g.id === id)?.name ?? id ?? 'unknown';
   }
 
   channelName(id?: string): string {
-    if (!id) return 'channel-name-unknown';
-    return this.channelService.getByChannelId(id)?.name ?? id;
+    if (!id) return 'unknown';
+    for (const channels of Object.values(this.channelsByGroup())) {
+      const ch = channels.find((c) => c.id === id);
+      if (ch) return ch.name;
+    }
+    return id;
   }
 
   approve(req: AdminRequest): void {
-    if (!this.user) return;
-    this.adminRequestService.updateReqStatus(this.user.id, req.id, 'approved');
-    this.loadViewData();
+    this.adminRequestService
+      .updateReqStatus(this.user.id, req.id, 'approved')
+      .subscribe(() => this.loadAdminRequests());
   }
 
   reject(req: AdminRequest): void {
-    if (!this.user) return;
-    this.adminRequestService.updateReqStatus(this.user.id, req.id, 'rejected');
-    this.loadViewData();
-
+    this.adminRequestService
+      .updateReqStatus(this.user.id, req.id, 'rejected')
+      .subscribe(() => this.loadAdminRequests());
   }
 
   formatDate(d: Date): string {
