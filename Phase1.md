@@ -1,11 +1,17 @@
+# 3813ICT Phase 1 Submission
+
+**Name:** Anton Korotkov  
+**Student number:** s5343594  
+**GitHub:** [https://github.com/Yskrim/3813ICT-Assignment-5343594](https://github.com/Yskrim/3813ICT-Assignment-5343594)  
+
 # Phase 1 — Specification, Design & Prototype
 
 3813ICT Full Stack Development  assignment phase1 by Anton Korotkov s5343594 (Wednesday 1pm class)  
 
-GitHub repo: https://github.com/Yskrim/3813ICT-Assignment-5343594
----
+## GitHub repo: [https://github.com/Yskrim/3813ICT-Assignment-5343594](https://github.com/Yskrim/3813ICT-Assignment-5343594)
 
 ## 1. Project Overview
+
 This project is a full-stack chat application built for the 3813ICT assignment. 
 The system allows users to communicate in group channels with role-based access control.
 
@@ -15,13 +21,19 @@ The system allows users to communicate in group channels with role-based access 
 - **Channel** — a chat room inside a group
 - **Message** — text messages inside a channel (mock data in Phase 1)
 
+
+
 ### User roles
+
 
 | Role         | Description                                                            |
 | ------------ | ---------------------------------------------------------------------- |
 | `user`       | Member of groups/channels; can send messages, request channel creation |
 | `groupAdmin` | Manages their groups; approves group-scoped admin requests             |
 | `superAdmin` | Approves super-scoped requests (ban, giveAdmin, deleteGroup, etc.)     |
+
+
+
 
 ### Phase 1 scope
 
@@ -32,6 +44,8 @@ The system allows users to communicate in group channels with role-based access 
 - Admin panel with approve/reject flow; `createChannel` approval creates a new channel
 - **Planned / in progress:** persistent JSON storage on Node/Express server for users, groups, and channels
 
+
+
 ### Out of scope (Phase 2)
 
 - Real-time messaging via Socket.io
@@ -41,15 +55,21 @@ The system allows users to communicate in group channels with role-based access 
 
 ---
 
+
+
 ## 2. Git Strategy
+
 
 | Practice             | Description                                                                   |
 | -------------------- | ----------------------------------------------------------------------------- |
 | **Main branch**      | `main` — stable, submission-ready code                                        |
 | **Feature branches** | Short-lived branches per feature (e.g. `feature/auth`, `feature/admin-panel`) |
-| **Commits**          | Small, focused commits with clear messages describing _why_                   |
+| **Commits**          | Small, focused commits with clear messages describing *why*                   |
 | **Pull requests**    | Optional self-review before merging to `main`                                 |
 | **Tags**             | Tag `phase1-submission` at final submission commit                            |
+
+
+
 
 ### Example workflow
 
@@ -60,9 +80,14 @@ The system allows users to communicate in group channels with role-based access 
 
 ---
 
+
+
 ## 3. Specifications & Assumptions
 
+
+
 ### Functional requirements (from client briefing)
+
 
 | Requirement                                | Phase 1 status                                            |
 | ------------------------------------------ | --------------------------------------------------------- |
@@ -79,7 +104,11 @@ The system allows users to communicate in group channels with role-based access 
 | No unread badges / quote replies           | By design                                                 |
 | Kick / ban / delete group                  | UI placeholders; approve logic partial                    |
 
+
+
+
 ### Permissions matrix
+
 
 | Action                        | User | Group Admin                  | Super Admin               |
 | ----------------------------- | ---- | ---------------------------- | ------------------------- |
@@ -93,30 +122,37 @@ The system allows users to communicate in group channels with role-based access 
 | Edit group (name/image/theme) | No   | Yes (UI placeholder)         | Yes (if also group admin) |
 | Delete own account            | Yes  | No while admin               | No                        |
 
+
+
+
 ### Assumptions
 
 1. Authentication
-   — Phase 1 uses plain-text passwords in mock seed data; hashing on server in Phase 2.
+  — Phase 1 uses plain-text passwords in mock seed data; hashing on server in Phase 2.
 2. Messages
-   — Stored in-memory in Angular seed; not persisted after page refresh.
+  — Stored in-memory in Angular seed; not persisted after page refresh.
 3. Channel IDs
-   — String identifiers (e.g. `'1'`, `'2'`) linked to messages via `chatId`.
+  — String identifiers (e.g. `'1'`, `'2'`) linked to messages via `chatId`.
 4. Super admin
-    - can also be a group admin
+  - can also be a group admin
     - they see both super requests and group requests for managed groups.
 5. Group names are unique
-    - (forced in Phase 2 server-side).
+  - (forced in Phase 2 server-side).
 6. No admin-only channels
-   — all channels are visible to group members.
+  — all channels are visible to group members.
 7. Images in messages
-   — model supports `imageUrl`; UI not implemented in Phase 1.
+  — model supports `imageUrl`; UI not implemented in Phase 1.
 8. Create channel
-   — regular users and group admins submit a request;
-    - a group admin (or super admin acting as group admin) approves it.
+  — regular users and group admins submit a request;
+  - a group admin (or super admin acting as group admin) approves it.
 
 ---
 
+
+
 ## 4. Data Structures
+
+
 
 ### User
 
@@ -132,6 +168,8 @@ interface User {
     dateOfBirth: Date;
 }
 ```
+
+
 
 ### Group
 
@@ -158,6 +196,8 @@ interface Channel {
 }
 ```
 
+
+
 ### Message
 
 ```ts
@@ -171,6 +211,8 @@ interface Message {
     isEdited: boolean;
 }
 ```
+
+
 
 ### AdminRequest
 
@@ -209,39 +251,26 @@ Super-scoped types: `banUser`, `deleteGroup`, `createGroup`, `deleteAccount`, `g
 
 ### Storage
 
-| Data                    | Phase 1                                 | Phase 2                          |
-| ----------------------- | --------------------------------------- | -------------------------------- |
-| Users, Groups, Channels | Angular seed files; server JSON planned | MongoDB                          |
-| Messages                | In-memory mock                          | Socket.io + server last-5 buffer |
-| Admin requests          | In-memory seed                          | Server JSON / DB                 |
-| Auth session            | Angular signal (lost on refresh)        | JWT / server session             |
+
+| Data                    | Phase 1                        | Phase 2                          |
+| ----------------------- | ------------------------------ | -------------------------------- |
+| Users, Groups, Channels | server JSON                    | MongoDB                          |
+| Messages                | In-memory mock                 | Socket.io + server last-5 buffer |
+| Admin requests          | Server json                    | Server JSON / DB                 |
+| Auth session            | Angular signal + localstrorage | JWT / server session             |
+
 
 ---
 
-## 5. Proposed Angular Architecture
 
-### Stack
-- Angular 20+ (standalone components)
-- Bootstrap 5 for responsive UI
-- Reactive Forms (channel message input, login)
-- Angular Signals (AuthService.currentUser)
 
-### Folder structure
-```
-src/app/
-├── app.ts / app.html
-├── app.routes.ts
-├── guards/
-│   ├── auth.guard.ts
-│   ├── guest.guard.ts
-│   └── role.guard.ts
-├── models/
-├── data/
-├── services/
-└── pages/
-```
+## 5.  Architecture
+
+
 
 ### Pages & routes
+
+
 | Page             | Route                             | Guard                                                 |
 | ---------------- | --------------------------------- | ----------------------------------------------------- |
 | Login            | `/login`                          | `guestGuard`                                          |
@@ -254,7 +283,12 @@ src/app/
 | Account Settings | `/user-profile-settings`          | `authGuard`                                           |
 | Admin Panel      | `/admin-panel`                    | `authGuard` + `roleGuard('groupAdmin', 'superAdmin')` |
 
+
+
+
 ### Services
+
+
 | Service               | Responsibility                          |
 | --------------------- | --------------------------------------- |
 | `AuthService`         | Login/logout, `currentUser` signal      |
@@ -265,34 +299,30 @@ src/app/
 | `AdminRequestService` | Panel view, approve/reject requests     |
 | `UtilsService`        | Date formatting                         |
 
-### Component tree
-```
-App (navbar + router-outlet)
-├── LoginPage
-├── HomePage (groups + channels list)
-├── GroupPage
-├── ChannelPage (messages + input)
-├── ChannelInfo
-├── GroupInfo
-├── UserProfile
-├── UserProfileSettings
-└── AdminPanelPage
-```
 
 ---
+
+
 
 ## 6. Server Endpoints
 
 URL: `http://localhost:3000/api`  
-Stack: Node.js + Express (+ Socket.io in Phase 2)
+Stack: Node.js + Express + Cors + socket.io
 
 ### Authentication
+
+
 | Method | Endpoint       | Description                               |
 | ------ | -------------- | ----------------------------------------- |
 | POST   | `/auth/login`  | Validate credentials, return user session |
 | POST   | `/auth/logout` | End session                               |
 
+
+
+
 ### Users
+
+
 | Method | Endpoint     | Description            |
 | ------ | ------------ | ---------------------- |
 | GET    | `/users`     | List all users (admin) |
@@ -301,7 +331,12 @@ Stack: Node.js + Express (+ Socket.io in Phase 2)
 | PUT    | `/users/:id` | Update user profile    |
 | DELETE | `/users/:id` | Delete account         |
 
+
+
+
 ### Groups
+
+
 | Method | Endpoint      | Description                        |
 | ------ | ------------- | ---------------------------------- |
 | GET    | `/groups`     | List groups for current user       |
@@ -310,7 +345,12 @@ Stack: Node.js + Express (+ Socket.io in Phase 2)
 | PUT    | `/groups/:id` | Update group (name, image, theme)  |
 | DELETE | `/groups/:id` | Delete group (super admin request) |
 
+
+
+
 ### Channels
+
+
 | Method | Endpoint                | Description            |
 | ------ | ----------------------- | ---------------------- |
 | GET    | `/groups/:gId/channels` | List channels in group |
@@ -319,14 +359,24 @@ Stack: Node.js + Express (+ Socket.io in Phase 2)
 | PUT    | `/channels/:id`         | Update channel         |
 | DELETE | `/channels/:id`         | Delete channel         |
 
+
+
+
 ### Admin Requests
+
+
 | Method | Endpoint              | Description                              |
 | ------ | --------------------- | ---------------------------------------- |
 | GET    | `/admin-requests`     | List pending requests (filtered by role) |
 | POST   | `/admin-requests`     | Submit new request                       |
 | PATCH  | `/admin-requests/:id` | Approve or reject                        |
 
-### Messages (Phase 2 — Socket.io)
+
+
+
+### Messages (Phase 2 — Socket.io) - what the final version of the project would include
+
+
 | Event           | Description                        |
 | --------------- | ---------------------------------- |
 | `joinChannel`   | Join room, receive last 5 messages |
@@ -335,14 +385,21 @@ Stack: Node.js + Express (+ Socket.io in Phase 2)
 | `deleteMessage` | Broadcast message deletion         |
 | `editMessage`   | Broadcast message edit             |
 
-### Phase 1 server
+
+
+
+### Phase 1 server that I have got now
+
 - Express + CORS + Socket.io skeleton exists in `/server`
-- REST endpoints and JSON file persistence: in progress
+- REST endpoints and JSON file persistence: mostly done
+  - server has own route endpoints
+  - server-side requests mutate data in the stored json files
 
 ---
 
-## 7. Design Documents
-### Responsive design approach
+
+
+## 7. Design
 
 - Mobile-first layout using Bootstrap 5 grid and utilities
 - Navbar shown only when user is logged in
@@ -350,8 +407,19 @@ Stack: Node.js + Express (+ Socket.io in Phase 2)
 - Channel message list scrolls within fixed height max-height: 60vh
 - Max content width w-75 container for readability on desktop
 
+
+
 ### Storyboards
-> SCREENSHOTS here
+
+![Login Screen](documentation/storyboards/login.png)
+![Home Screen](documentation/storyboards/home.png)
+![Channel View](documentation/storyboards/channel.png)
+![Group Info](documentation/storyboards/group-info.png)
+![Settings view](documentation/storyboards/settings.png)
+![Channel info view](documentation/storyboards/channel-info.png)
+![Profile view](documentation/storyboards/profile.png)
+![Admin Panel](documentation/storyboards/admin-panel.png)
+
 
 | Screen       | Description                                           |
 | ------------ | ----------------------------------------------------- |
@@ -364,15 +432,22 @@ Stack: Node.js + Express (+ Socket.io in Phase 2)
 | Settings     | Edit profile fields, delete account                   |
 | Admin Panel  | Super/group requests with approve/reject; groups list |
 
+
+
+
 ### UI colour scheme
 - Primary navbar: Bootstrap `bg-primary`
 - Cards with `card-header` for section titles
 - Admin Panel link visible only for `groupAdmin` / `superAdmin`
 
+
+
 ### Component diagram
 See `Project Component Structure.png` in the repository root.
 
 ---
+
+
 
 ## 8. Test Accounts (Phase 1 mock)
 | Username   | Password | Role                                       |
@@ -382,7 +457,10 @@ See `Project Component Structure.png` in the repository root.
 | `@bob`     | `123`    | user                                       |
 | `@charlie` | `123`    | groupAdmin                                 |
 
+
 ---
+
+
 
 ## 9. Known Limitations (Phase 1)
 1. User session lost on page refresh (no persistent auth token)
@@ -396,6 +474,8 @@ See `Project Component Structure.png` in the repository root.
 
 ---
 
+
+
 ## 10. Phase 2 Roadmap
 - MongoDB
 - REST API implementation
@@ -404,3 +484,4 @@ See `Project Component Structure.png` in the repository root.
 - Password hashing + bcrypt
 - Image upload for messages and group avatars
 - Direct messages -to be discussed
+
