@@ -83,7 +83,7 @@ export class AdminRequestService {
 
                 return createChannel$.pipe(
                     switchMap(() =>
-                        this.http.put<AdminRequest>(`${this.requestsUrl}/${id}`, updatedRequest),
+                        this.http.patch<AdminRequest>(`${this.requestsUrl}/${id}`, updatedRequest),
                     ),
                 );
             }),
