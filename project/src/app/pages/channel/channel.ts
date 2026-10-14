@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { Group, Channel, Message, User } from '../../models';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
@@ -10,13 +10,16 @@ import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 
+import { SocketService } from '../../services/socket.service';
+
 @Component({
 	imports: [RouterLink, ReactiveFormsModule],
 	selector: 'app-channel',
 	styleUrl: './channel.css',
 	templateUrl: './channel.html',
 })
-export class ChannelPage implements OnInit {
+export class ChannelPage implements OnInit, OnDestroy {
+	// CLEAR DEPENDENCIES -- TODO --------------------------------------------------------------------------------
 	private route = inject(ActivatedRoute);
 	private groupService = inject(GroupService);
 	private channelService = inject(ChannelService);
@@ -25,9 +28,12 @@ export class ChannelPage implements OnInit {
 	private authService = inject(AuthService);
 	private location = inject(Location);
 
+	// USE ngModel and template variables -- TODO ---------------------------------------------------------------------------
 	gId = '';
 	cId = '';
 	user!: User;
+
+	// READ VALUES FROM IMPORTED SERVICES -- TODO ---------------------------------------------------------------------------
 
 	group = signal<Group | undefined>(undefined);
 	channel = signal<Channel | undefined>(undefined);
@@ -38,8 +44,6 @@ export class ChannelPage implements OnInit {
 	form = new FormGroup({
 		message: new FormControl(''),
 	});
-
-	constructor() {}
 
 	goBack(): void {
 		this.location.back();
@@ -52,11 +56,19 @@ export class ChannelPage implements OnInit {
 		const user = this.authService.currentUser();
 		if (!user) return;
 
-		// send
-		this.messageService.sendMessage(this.cId, user.id, text);
+		// send -------------------------------------------------------------------------------------------------------------
+		this.gId = this.route.snapshot.paramMap.get('gId')!;
+		this.socket.send({
+			id: crypto.randomUUID(),
+			chatId: this.cId,
+			senderId: user.id,
+			text,
+			createdAt: new Date().toISOString(),
+			isEdited: false,
+		});
 
 		// rerender
-		this.messages.set(this.messageService.getMessagesForChannel(this.cId));
+		// this.messages.set(this.messageService.getMessagesForChannel(this.cId));
 		this.form.reset();
 	}
 
@@ -70,7 +82,19 @@ export class ChannelPage implements OnInit {
 		this.messages.set(this.messageService.getMessagesForChannel(this.cId));
 	}
 
+	private socket = inject(SocketService);
+	private sub?: Subscription;
+
 	ngOnInit() {
+		// subscribe to receiving messages from socket --------------------------------------------------------------------------
+		this.sub = this.socket.getMessages().subscribe({
+			next: (message) => {
+				if (message.chatId !== this.cId) return;
+				this.messages.update((prev) => [...prev, message]);
+			},
+		});
+
+		// old code CLEAR OUT -- TODO --------------------------------------------------------------------------------------------
 		this.gId = this.route.snapshot.paramMap.get('gId')!;
 		this.cId = this.route.snapshot.paramMap.get('cId')!;
 
@@ -102,5 +126,10 @@ export class ChannelPage implements OnInit {
 				this.loading.set(false);
 			},
 		});
+	}
+
+	ngOnDestroy() {
+		// unsubscribe from socket --------------------------------------------------------------------------------------------
+		this.sub?.unsubscribe();
 	}
 }
