@@ -18,7 +18,7 @@ export class AdminRequestService {
     ) { }
 
     getAdminRequests(user: User): Observable<{ groupRequests: AdminRequest[]; superRequests: AdminRequest[] }> {
-        return this.groupService.getGroupsForUser(user.id).pipe(
+        return this.groupService.getForUser(user.id).pipe(
             switchMap((groups) =>
                 this.http.get<AdminRequest[]>(this.requestsUrl).pipe(
                     map((requests) => {
@@ -83,7 +83,7 @@ export class AdminRequestService {
 
                 return createChannel$.pipe(
                     switchMap(() =>
-                        this.http.put<AdminRequest>(`${this.requestsUrl}/${id}`, updatedRequest),
+                        this.http.patch<AdminRequest>(`${this.requestsUrl}/${id}`, updatedRequest),
                     ),
                 );
             }),

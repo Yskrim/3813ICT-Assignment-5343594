@@ -1,7 +1,7 @@
 [
   {
     "id": "1",
-    "username": "@korton",
+    "username": "korton",
     "password": "123",
     "role": "superAdmin",
     "displayName": "Anton Korotkov",
