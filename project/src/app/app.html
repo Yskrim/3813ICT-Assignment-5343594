@@ -8,10 +8,10 @@
 				@if (!user) {
 					<a class="nav-link text-light px-2" routerLink="/login">Login</a>
 				}
-				<a class="nav-link text-light px-2" routerLink="/user-profile">Profile</a>
-				<a class="nav-link text-light px-2" routerLink="/user-profile-settings">Settings</a>
+				<a class="nav-link text-light px-2" routerLink="/profile">Profile</a>
+				<a class="nav-link text-light px-2" routerLink="/profile/settings">Settings</a>
 				@if (user?.role === 'groupAdmin' || user?.role === 'superAdmin') {
-					<a class="nav-link text-light px-2" routerLink="/admin-panel">Admin Panel</a>
+					<a class="nav-link text-light px-2" routerLink="/admin">Admin Panel</a>
 				}
 			}
 		</div>
