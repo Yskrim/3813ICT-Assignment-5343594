@@ -36,8 +36,8 @@ export class GroupPage implements OnInit {
     const user = this.auth.currentUser()!;
 
     forkJoin([
-      this.groupService.getByGroupId(user.id, this.gId),
-      this.channelService.getByGroupId(user.id, this.gId),
+      this.groupService.getById(this.gId),
+      this.channelService.getForGroup(this.gId, user.id),
     ]).subscribe({
       next: ([group, channels]) => {
         this.group.set(group);

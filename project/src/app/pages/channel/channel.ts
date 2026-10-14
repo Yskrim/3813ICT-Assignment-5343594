@@ -1,7 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { Group, Channel, Message, User } from '../../models'
+import { Group, Channel, Message, User } from '../../models';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
 import { MessageService } from '../../services/message.service';
@@ -16,8 +16,15 @@ import { UserService } from '../../services/user.service';
 	styleUrl: './channel.css',
 	templateUrl: './channel.html',
 })
-
 export class ChannelPage implements OnInit {
+	private route = inject(ActivatedRoute);
+	private groupService = inject(GroupService);
+	private channelService = inject(ChannelService);
+	private messageService = inject(MessageService);
+	private userService = inject(UserService);
+	private authService = inject(AuthService);
+	private location = inject(Location);
+
 	gId = '';
 	cId = '';
 	user!: User;
@@ -29,18 +36,10 @@ export class ChannelPage implements OnInit {
 	loading = signal(true);
 
 	form = new FormGroup({
-		message: new FormControl('')
-	})
+		message: new FormControl(''),
+	});
 
-	constructor(
-		private route: ActivatedRoute,
-		private groupService: GroupService,
-		private channelService: ChannelService,
-		private messageService: MessageService,
-		private userService: UserService,
-		private authService: AuthService,
-		private location: Location,
-	) { }
+	constructor() {}
 
 	goBack(): void {
 		this.location.back();
@@ -57,7 +56,6 @@ export class ChannelPage implements OnInit {
 		this.messageService.sendMessage(this.cId, user.id, text);
 
 		// rerender
-		this.messageService.sendMessage(this.cId, user.id, text);
 		this.messages.set(this.messageService.getMessagesForChannel(this.cId));
 		this.form.reset();
 	}
@@ -78,36 +76,31 @@ export class ChannelPage implements OnInit {
 
 		const user = this.authService.currentUser();
 		if (!user) {
-			throw new Error("User not found.");
+			throw new Error('User not found.');
 		}
 		this.user = user;
 
 		// get group and channel data in parallel
-		forkJoin([
-			this.groupService.getByGroupId(user.id, this.gId),
-			this.channelService.getByChannelId(this.cId),
-		]).subscribe({
+		forkJoin([this.groupService.getById(this.gId), this.channelService.getById(this.cId)]).subscribe({
 			next: ([group, channel]) => {
-
 				this.group.set(group);
 				this.channel.set(channel);
 				this.messages.set(this.messageService.getMessagesForChannel(this.cId));
 
 				// getByIdsList returns Observable<User[]>, need to subscribe to get members
-				this.userService.getByIdsList(channel.memberIds).subscribe({
+				this.userService.getByIds(channel.memberIds).subscribe({
 					next: (members) => {
 						this.members.set(members);
 					},
 					error: () => {
 						this.members.set([]);
-					}
+					},
 				});
 				this.loading.set(false);
 			},
-			error: () => { this.loading.set(false) },
+			error: () => {
+				this.loading.set(false);
+			},
 		});
 	}
 }
-
-
-

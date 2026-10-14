@@ -41,15 +41,15 @@ export class ChannelInfo implements OnInit {
     this.uId = this.route.snapshot.parent?.paramMap.get('userId') || '';
 
     forkJoin([
-      this.groupService.getByGroupId(this.uId, this.gId),
-      this.channelService.getByChannelId(this.cId),
+      this.groupService.getById(this.gId),
+      this.channelService.getById(this.cId),
     ]).subscribe({
       next: ([group, channel]) => {
         this.group.set(group);
         this.channel.set(channel);
         if (channel && channel.memberIds) {
    
-          this.userService.getByIdsList(channel.memberIds).subscribe({
+          this.userService.getByIds(channel.memberIds).subscribe({
      
             next: (members) => {
               this.members.set(members);
