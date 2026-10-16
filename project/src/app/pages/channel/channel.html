@@ -6,10 +6,7 @@
 			<h4 class="">{{ channel()?.name }}</h4>
 			<div class="d-flex gap-2">
 				<button class="btn btn-sm btn-primary" (click)="goBack()">Go back</button>
-				<button
-					class="btn btn-sm btn-outline-primary"
-					[routerLink]="['/groups', gId, 'channels', cId, 'info']"
-				>
+				<button class="btn btn-sm btn-outline-primary" [routerLink]="['/groups', groupId, 'channels', channelId, 'info']">
 					Channel info
 				</button>
 			</div>
@@ -25,21 +22,11 @@
 							<div>
 								{{ msg.text }}
 							</div>
-							<div class="text-muted small mb-1">
-								{{ msg.senderId }} · {{ msg.createdAt }}
-							</div>
+							<div class="text-muted small mb-1">{{ msg.senderId }} · {{ msg.createdAt }}</div>
 
-							@if (msg.senderId === user?.id) {
-								<button
-									type="button"
-									class="btn btn-sm btn-outline-danger"
-									(click)="deleteMessage(msg.id)"
-								>
-									Delete
-								</button>
-								<button type="button" class="btn btn-sm btn-outline-info">
-									Edit
-								</button>
+							@if (msg.senderId === user()?.id) {
+								<button type="button" class="btn btn-sm btn-outline-danger">Delete</button>
+								<button type="button" class="btn btn-sm btn-outline-info">Edit</button>
 							}
 						</div>
 					</div>
@@ -48,20 +35,8 @@
 		</ul>
 	</div>
 
-	<form
-		[formGroup]="form"
-		(ngSubmit)="handleSubmit()"
-		name="message input form"
-		class="d-flex gap-2"
-	>
-		<input
-			class="form-control flex-grow-1"
-			formControlName="message"
-			type="text"
-			placeholder="Type your message..."
-		/>
-		<button type="submit" [disabled]="!form.value.message?.trim()" class="btn btn-primary">
-			Send
-		</button>
+	<form [formGroup]="form" (ngSubmit)="send()" name="message input form" class="d-flex gap-2">
+		<input class="form-control flex-grow-1" formControlName="message" type="text" placeholder="Type your message..." />
+		<button type="submit" [disabled]="!form.value.message?.trim()" class="btn btn-primary">Send</button>
 	</form>
 </div>

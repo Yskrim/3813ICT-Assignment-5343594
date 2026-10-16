@@ -29,9 +29,6 @@ const corsOptions = {
 const io = new Server(httpServer, { cors: { origin: allowedOrigins, credentials: true } });
 connect(io);
 
-// attach socket events from sockets.js to io
-require('./sockets').connect(io);
-
 // middleware ------------------------------------------------------------------------------------------------------
 app.use(cors(corsOptions));
 app.use(express.json());
