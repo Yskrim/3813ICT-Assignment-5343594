@@ -12,15 +12,31 @@ export class SocketService {
 	}
 
 	getMessages(): Observable<Message> {
-		return new Observable<Message>((observer) => {
-			// one method for sub and unsub
-            const messageHandler = (message: Message) => observer.next(message);
-			
-            // observable action
-            this.socket.on('message', messageHandler);
+		return this.listen<Message>('message');
+	}
 
-            // cleanup method
-			return () => this.socket.off('message', messageHandler);
+	join(channelId: string): void {
+		this.socket.emit('join', channelId);
+	}
+
+	leave(channelId: string): void {
+		this.socket.emit('leave', channelId);
+	}
+
+	getHistory(): Observable<Message[]> {
+		return this.listen<Message[]>('history');
+	}
+
+	private listen<T>(event: string): Observable<T> {
+		return new Observable<T>((observer) => {
+			// one method for sub and unsub
+			const handler = (data: T) => observer.next(data);
+
+			// observable action
+			this.socket.on(event, handler);
+
+			// cleanup method
+			return () => this.socket.off(event, handler);
 		});
 	}
 }

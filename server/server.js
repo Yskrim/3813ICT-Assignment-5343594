@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const { createServer } = require('http');
+const { Server } = require('socket.io');
+const { connect } = require('./sockets');
 const PORT = 3000;
 
 // create server ------------------------------------------------------------------------------------------------------
@@ -12,7 +14,7 @@ const httpServer = createServer(app);
 const allowedOrigins = ['http://localhost:4200', 'http://127.0.0.1:4200'];
 const corsOptions = {
 	origin(origin, callback) {
-		// allow server-to-server / curl / postman (no Origin header)
+		// allow server-to-server or curl (no Origin header)
 		if (!origin || allowedOrigins.includes(origin)) {
 			callback(null, true);
 		} else {
@@ -24,21 +26,11 @@ const corsOptions = {
 };
 
 // sockets setup ------------------------------------------------------------------------------------------------------
-const { Server } = require('socket.io');
 const io = new Server(httpServer, { cors: { origin: allowedOrigins, credentials: true } });
+connect(io);
 
-
-io.on('connection', (socket) => {
-    // connection
-    console.log('Connected: ', socket.id);
-
-    // message
-    socket.on('message', (msgText) => io.emit('message', msgText) );
-
-    // disconnect
-    socket.on('disconnect', () => console.log('Disconnected:', socket.id) );
-});
-
+// attach socket events from sockets.js to io
+require('./sockets').connect(io);
 
 // middleware ------------------------------------------------------------------------------------------------------
 app.use(cors(corsOptions));
