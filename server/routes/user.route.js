@@ -38,7 +38,7 @@ router.delete('/users/:id', async (req, res) => {
 	await channels().updateMany({}, pullUser);
 
 	// DELETE USER'S MESSAGES FROM ALL CHANNELS
-    removeUserMessages(id);
+	removeUserMessages(id);
 
 	res.status(204).send();
 });
@@ -64,6 +64,50 @@ router.patch('/users/:id', async (req, res) => {
 	if (!updatedUser) return res.status(404).json({ error: 'User not found' });
 
 	res.json(updatedUser);
+});
+
+const USERNAME_RE = /^@?[a-zA-Z0-9_]{3,20}$/;
+
+router.post('/users', async (req, res) => {
+	const { username, displayName, password } = req.body ?? {};
+	const name = typeof username === 'string' ? username.trim() : '';
+	const display = typeof displayName === 'string' ? displayName.trim() : '';
+	const pwd = typeof password === 'string' ? password.trim() : '';
+
+	// server side validation, same rules as client form
+	if (!USERNAME_RE.test(name)) {
+		return res.status(400).json({ error: 'Username: 3-20 letters, digits or _' });
+	}
+	if (!display || display.length > 40) {
+		return res.status(400).json({ error: 'Display name: 1-40 characters' });
+	}
+	if (pwd.length < 3) {
+		return res.status(400).json({ error: 'Password: at least 3 characters' });
+	}
+
+	// new users are always plain users, roles only via admin requests
+	const newUser = {
+		id: String(Date.now()),
+		username: name,
+		displayName: display,
+		password: pwd,
+		role: 'user',
+		groupIds: [],
+		dateOfBirth: '',
+	};
+
+	try {
+		const taken = await users().findOne({ username: name }, { projection: { _id: 1 } });
+		if (taken) return res.status(409).json({ error: 'Username already taken' });
+
+		await users().insertOne({ ...newUser }); // copy, insertOne adds _id
+		const { password: _discarded, ...safeUser } = newUser;
+		res.status(201).json(safeUser);
+	} catch (err) {
+		// unique index on username catches two signups at same time
+		if (err.code === 11000) return res.status(409).json({ error: 'Username already taken' });
+		res.status(500).json({ error: 'Storage error' });
+	}
 });
 
 module.exports = router; // export endpoint

@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, of, tap } from 'rxjs';
+import { Observable, catchError, of, switchMap, tap } from 'rxjs';
 import { User, UserRole } from '../models';
 import { Router } from '@angular/router';
 import { StorageService } from './storage.service';
@@ -35,7 +35,7 @@ export class AuthService {
 	}
 
 	login(username: string, password: string): Observable<User | null> {
-        const authRequest$ = this.http.post<User>(`/api/auth/login`, { username, password }).pipe(
+		const authRequest$ = this.http.post<User>(`/api/auth/login`, { username, password }).pipe(
 			tap((user) => {
 				this.userState.set(user);
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
@@ -43,7 +43,15 @@ export class AuthService {
 			catchError(() => of(null)),
 		);
 
-        return authRequest$;
+		return authRequest$;
+	}
+
+	// create account, then log in with same credentials
+	// errors (400 / 409) go to subscriber, so page can show server message
+	register(username: string, displayName: string, password: string): Observable<User | null> {
+		return this.http
+			.post<User>('/api/users', { username, displayName, password })
+			.pipe(switchMap(() => this.login(username, password)));
 	}
 
 	// replace the session user after a profile update

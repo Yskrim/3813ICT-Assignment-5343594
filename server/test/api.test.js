@@ -207,3 +207,29 @@ describe('admin requests', () => {
 		assert.strictEqual(res.status, 400);
 	});
 });
+
+// register ---
+describe('POST /api/users (register)', () => {
+	it('creates plain user without password in answer, then can log in', async () => {
+		const res = await request(app)
+			.post('/api/users')
+			.send({ username: 'newbie', displayName: 'New Bie', password: 'secret', role: 'superAdmin' });
+
+		assert.strictEqual(res.status, 201);
+		assert.strictEqual(res.body.role, 'user'); // role from body ignored
+		assert.strictEqual(res.body.password, undefined);
+
+		const login = await request(app).post('/api/auth/login').send({ username: 'newbie', password: 'secret' });
+		assert.strictEqual(login.status, 201);
+	});
+
+	it('rejects taken username (409)', async () => {
+		const res = await request(app).post('/api/users').send({ username: 'korton', displayName: 'Copy', password: 'secret' });
+		assert.strictEqual(res.status, 409);
+	});
+
+	it('rejects invalid username (400)', async () => {
+		const res = await request(app).post('/api/users').send({ username: 'a b', displayName: 'X', password: 'secret' });
+		assert.strictEqual(res.status, 400);
+	});
+});

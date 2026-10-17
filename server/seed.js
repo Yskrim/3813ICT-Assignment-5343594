@@ -21,6 +21,7 @@ async function seedDB() {
 			await col.insertMany(docs);
 		}
 		await col.createIndex({ id: 1 }, { unique: true });
+        if (name === 'users') await col.createIndex({ username: 1 }, { unique: true }); // no two same usernames
 	}
 }
 
