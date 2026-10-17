@@ -1,6 +1,7 @@
 <!-- channel page -->
-<div class="container" style="max-width: 700px">
-	<div class="card p-4">
+<div class="h-100 d-flex flex-column">
+	<div class="card p-4 flex-grow">
+		<!-- channel header -->
 		<div class="d-flex flex-column">
 			<h6>{{ group()?.name }} /</h6>
 			<h4 class="">{{ channel()?.name }}</h4>
@@ -12,31 +13,32 @@
 			</div>
 		</div>
 	</div>
-	<br />
-	<div class="card mb-3" style="min-height: 350px; max-height: 60vh; overflow-y: auto">
-		<ul class="list-group">
-			@for (msg of messages(); track msg.id) {
-				<li class="list-group-item bg-light p-3">
-					<div class="d-flex">
-						<div class="flex-grow-1">
-							<div>
-								{{ msg.text }}
-							</div>
-							<div class="text-muted small mb-1">{{ msg.senderId }} · {{ msg.createdAt }}</div>
-
-							@if (msg.senderId === user()?.id) {
-								<button type="button" class="btn btn-sm btn-outline-danger">Delete</button>
-								<button type="button" class="btn btn-sm btn-outline-info">Edit</button>
-							}
-						</div>
+	<!-- channel body -->
+	<div class="card h-100 overflow-scroll d-flex flex-column">
+		@for (msg of messages(); track msg.id) {
+			<!-- row -->
+			<div class="d-flex flex-row justify-content-end">
+				<!-- message -->
+				<div>
+					<div class="px-3 py-2 me-3 mb-1 text-white rounded-3 bg-primary">
+						{{ msg.text }}
 					</div>
-				</li>
-			}
-		</ul>
+					<!-- @if (msg.senderId === user()?.id) {
+                 <button type="button" class="btn btn-sm btn-outline-danger">Delete</button>
+                 <button type="button" class="btn btn-sm btn-outline-info">Edit</button>
+               } -->
+				</div>
+			</div>
+			<div class="small me-3 mb-3 rounded-3 text-muted">{{ msg.senderId }}</div>
+			<div class="small me-3 mb-3 rounded-3 text-muted">{{ msg.createdAt }}</div>
+		}
 	</div>
 
-	<form [formGroup]="form" (ngSubmit)="send()" name="message input form" class="d-flex gap-2">
-		<input class="form-control flex-grow-1" formControlName="message" type="text" placeholder="Type your message..." />
-		<button type="submit" [disabled]="!form.value.message?.trim()" class="btn btn-primary">Send</button>
-	</form>
+	<!-- channel input group -->
+	<div class="pt-3">
+		<form name="message input form" [formGroup]="msgInputForm" (ngSubmit)="send()" class="d-flex gap-2">
+			<input class="form-control flex-grow-1" formControlName="message" type="text" placeholder="Type your message..." />
+			<button type="submit" [disabled]="!msgInputForm.value.message?.trim()" class="btn btn-primary">Send</button>
+		</form>
+	</div>
 </div>
