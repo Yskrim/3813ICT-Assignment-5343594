@@ -127,3 +127,41 @@ describe('DELETE /api/users/:id', () => {
 		assert.strictEqual(res.status, 404);
 	});
 });
+
+// groups write ---
+describe('POST /api/groups', () => {
+	it('creates group and it can be read back', async () => {
+		const res = await request(app)
+			.post('/api/groups')
+			.send({ name: '  New Group ', adminIds: ['1'], memberIds: ['1'] });
+
+		assert.strictEqual(res.status, 201);
+		assert.strictEqual(res.body.name, 'New Group');
+		assert.strictEqual(res.body._id, undefined);
+
+		const back = await request(app).get(`/api/groups/${res.body.id}`);
+		assert.strictEqual(back.status, 200);
+		assert.strictEqual(back.body.name, 'New Group');
+	});
+});
+
+// channels write ---
+describe('POST /api/channels', () => {
+    it('creates channel with group members by default', async () => {
+      const res = await request(app)
+        .post('/api/channels')
+        .send({ name: 'random', groupId: '1' });
+
+      assert.strictEqual(res.status, 201);
+      assert.strictEqual(res.body.groupId, '1');
+      assert.ok(res.body.memberIds.length > 0);
+    });
+
+    it('returns 404 for unknown group', async () => {
+      const res = await request(app)
+        .post('/api/channels')
+        .send({ name: 'random', groupId: '999' });
+
+      assert.strictEqual(res.status, 404);
+    });
+  });

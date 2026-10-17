@@ -1,11 +1,18 @@
 const express = require('express'); //express support
-const { readJson, writeJson } = require('../utils'); //r/w methods
+const { getDB } = require('../db');
 
 const router = express.Router(); // new router
 
+// collections
+const channels = () => getDB().collection('channels');
+const groups = () => getDB().collection('groups');
+const users = () => getDB().collection('users');
+
+const NO_ID = { projection: { _id: 0 } };
+
 // CHANNELS
 
-// GET /channels?userId=1&groupId=2 — channels of a group visible to the user
+// GET — channels of a group visible to the user
 router.get('/channels', async (req, res) => {
 	const userId = (req.query.userId ?? '').trim();
 	const groupId = (req.query.groupId ?? '').trim();
@@ -13,23 +20,23 @@ router.get('/channels', async (req, res) => {
 	if (!groupId) return res.status(400).json({ error: 'Group id missing' });
 
 	try {
-		const [channels, users, groups] = await Promise.all([
-			readJson('channels.json'),
-			readJson('users.json'),
-			readJson('groups.json'),
+		// user + group in parallel
+		const [user, group] = await Promise.all([
+			users().findOne({ id: userId }, NO_ID),
+			groups().findOne({ id: groupId }, NO_ID),
 		]);
 
-		const user = users.find((u) => u.id === userId);
 		if (!user) return res.status(404).json({ error: 'User not found' });
-
-		const group = groups.find((g) => g.id === groupId);
 		if (!group) return res.status(404).json({ error: 'Group not found' });
 
-		const isMember = user.groupIds.includes(groupId) || group?.memberIds.includes(userId);
-		if (!isMember) return res.status(403).json({ error: 'Not a member of this group' });
+		const isMember = user.groupIds.includes(groupId) || group.memberIds.includes(userId);
+		if (!isMember) {
+			return res.status(403).json({ error: 'Not a member of this group' });
+		}
 
-		// empty array is a valid answer: the group simply has no channels yet
-		res.json(channels.filter((c) => c.groupId === groupId));
+		// empty array is ok, group has no channels yet
+		const list = await channels().find({ groupId }, NO_ID).toArray();
+		res.json(list);
 	} catch (err) {
 		res.status(500).json({ error: 'Storage error' });
 	}
@@ -38,8 +45,7 @@ router.get('/channels', async (req, res) => {
 // GET one channel by id
 router.get('/channels/:id', async (req, res) => {
 	try {
-		const channels = await readJson('channels.json');
-		const channel = channels.find((c) => c.id === req.params.id);
+		const channel = await channels().findOne({ id: req.params.id }, NO_ID);
 		if (!channel) return res.status(404).json({ error: 'Not found' });
 		res.json(channel);
 	} catch (err) {
@@ -50,16 +56,16 @@ router.get('/channels/:id', async (req, res) => {
 // POST create a channel (admin)
 router.post('/channels', async (req, res) => {
 	const { name, groupId, adminIds, memberIds } = req.body ?? {};
-	const trimmedName = (name ?? '').trim();
-	if (!trimmedName || !groupId) return res.status(400).json({ error: 'Name and GroupId are Required' });
+	const trimmedName = typeof name === 'string' ? name.trim() : '';
+	if (!trimmedName || !groupId) {
+		return res.status(400).json({ error: 'Name and GroupId are Required' });
+	}
 
 	try {
-		const [channels, groups] = await Promise.all([readJson('channels.json'), readJson('groups.json')]);
-
-		const group = groups.find((g) => g.id === groupId);
+		const group = await groups().findOne({ id: groupId }, NO_ID);
 		if (!group) return res.status(404).json({ error: 'Group not found' });
 
-		// only whitelisted fields; admins/members default to the group's
+		// admins/members default to the group's
 		const newChannel = {
 			id: String(Date.now()),
 			name: trimmedName,
@@ -68,8 +74,8 @@ router.post('/channels', async (req, res) => {
 			memberIds: Array.isArray(memberIds) ? memberIds : [...group.memberIds],
 		};
 
-		channels.push(newChannel);
-		await writeJson('channels.json', channels);
+		// insertOne adds _id to object -> insert a copy
+		await channels().insertOne({ ...newChannel });
 		res.status(201).json(newChannel);
 	} catch (err) {
 		res.status(500).json({ error: 'Storage error' });
