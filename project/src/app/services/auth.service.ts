@@ -2,7 +2,6 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, of, tap } from 'rxjs';
 import { User, UserRole } from '../models';
-import { apiURL } from '../app.config';
 import { Router } from '@angular/router';
 import { StorageService } from './storage.service';
 import { GroupService } from './group.service';
@@ -36,7 +35,7 @@ export class AuthService {
 	}
 
 	login(username: string, password: string): Observable<User | null> {
-        const authRequest$ = this.http.post<User>(`${apiURL}/auth/login`, { username, password }).pipe(
+        const authRequest$ = this.http.post<User>(`/api/auth/login`, { username, password }).pipe(
 			tap((user) => {
 				this.userState.set(user);
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
