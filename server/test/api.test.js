@@ -2,6 +2,12 @@ const request = require('supertest');
 const assert = require('assert');
 const app = require('../server');
 
+const { seedDB } = require('../seed');
+const { closeDB } = require('../db');
+
+before(async () => await seedDB());
+after(async () => await closeDB());
+
 // auth ---
 describe('POST /api/auth/login', () => {
 	it('logs in with correct username + password, no password in answer', async () => {

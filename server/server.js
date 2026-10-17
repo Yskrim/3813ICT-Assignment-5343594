@@ -4,6 +4,7 @@ const app = express();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { connect } = require('./sockets');
+const { connectDB } = require('./db');
 const PORT = 3000;
 
 // create server ------------------------------------------------------------------------------------------------------
@@ -35,27 +36,32 @@ app.use(express.json());
 app.use('/api', require('./routes')); // attach /api to routes defined under /api.
 
 // start server ------------------------------------------------------------------------------------------------------
-// httpServer
-// 	.listen(PORT, () => {
-// 		console.log(`Server is running on http://localhost:${PORT}`);
-// 	})
-// 	.on('error', (err) => {
-// 		console.log('Server failed to start');
-// 		if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
-// 	});
-
-
-// start test server
 if (require.main === module) {
-	httpServer
-		.listen(PORT, () => {
-			console.log(`Server is running on http://localhost:${PORT}`);
+	connectDB()
+		.then(() => {
+			httpServer
+				.listen(PORT, () => {
+					console.log(`Server is running on http://localhost:${PORT}`);
+				})
+				.on('error', (err) => {
+					console.log('Server failed to start');
+					if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
+				});
 		})
-		.on('error', (err) => {
-			console.log('Server failed to start');
-			if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
-		});
+		.catch((err) => console.error('MongoDB connection failed', err));
 }
 
-// export for tests 
+// // start test server
+// if (require.main === module) {
+// 	httpServer
+// 		.listen(PORT, () => {
+// 			console.log(`Server is running on http://localhost:${PORT}`);
+// 		})
+// 		.on('error', (err) => {
+// 			console.log('Server failed to start');
+// 			if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
+// 		});
+// }
+
+// export for tests
 module.exports = app;
