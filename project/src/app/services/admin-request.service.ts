@@ -17,9 +17,11 @@ export class AdminRequestService {
     ) { }
 
     getAdminRequests(user: User): Observable<{ groupRequests: AdminRequest[]; superRequests: AdminRequest[] }> {
-        return this.groupService.getForUser(user.id).pipe(
+        return this.groupService.getForUser(user.id)
+        .pipe(
             switchMap((groups) =>
-                this.http.get<AdminRequest[]>(this.requestsUrl).pipe(
+                this.http.get<AdminRequest[]>(this.requestsUrl)
+                .pipe(
                     map((requests) => {
                         const managedGroupsIds = groups
                             .filter((g) => g.adminIds?.includes(user.id))
@@ -45,10 +47,14 @@ export class AdminRequestService {
                                 : [];
 
                         return { groupRequests, superRequests };
-                    }),
+                        }),
                 ),
             ),
         );
+    }
+
+    create(draft: Partial<AdminRequest> & Pick<AdminRequest, 'type' | 'issuerId'>): Observable<AdminRequest> {
+        return this.http.post<AdminRequest>(this.requestsUrl, draft);
     }
 
     approve(adminId: string, id: string): Observable<AdminRequest | undefined> {
