@@ -89,3 +89,41 @@ describe('GET /api/channels', () => {
 		assert.strictEqual(res.status, 404);
 	});
 });
+
+// users write ---
+describe('PATCH /api/users/:id', () => {
+	it('updates only given fields, no password in answer', async () => {
+		const res = await request(app).patch('/api/users/3').send({ displayName: 'Bobby' });
+
+		assert.strictEqual(res.status, 200);
+		assert.strictEqual(res.body.displayName, 'Bobby');
+		assert.strictEqual(res.body.username, '@bob'); // untouched
+		assert.strictEqual(res.body.password, undefined);
+	});
+
+	it('rejects empty update (400)', async () => {
+		const res = await request(app).patch('/api/users/3').send({ displayName: '  ' });
+		assert.strictEqual(res.status, 400);
+	});
+});
+
+describe('DELETE /api/users/:id', () => {
+	it('deletes user and removes them from all groups', async () => {
+		const res = await request(app).delete('/api/users/3');
+		assert.strictEqual(res.status, 204);
+
+		const gone = await request(app).get('/api/users/3');
+		assert.strictEqual(gone.status, 404);
+
+		const groups = await request(app).get('/api/groups');
+		for (const g of groups.body) {
+			assert.ok(!g.memberIds.includes('3'));
+			assert.ok(!g.adminIds.includes('3'));
+		}
+	});
+
+	it('returns 404 for unknown user', async () => {
+		const res = await request(app).delete('/api/users/999');
+		assert.strictEqual(res.status, 404);
+	});
+});
