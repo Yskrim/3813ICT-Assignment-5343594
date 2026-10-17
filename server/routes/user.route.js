@@ -1,73 +1,69 @@
-// USERS
 const express = require('express'); //express support
-const { readJson, writeJson } = require('../utils'); //r/w methods
+const { getDB } = require('../db');
+const { removeUserMessages } = require('../sockets'); // messages live in socket memory, not db
 
 const router = express.Router(); // new router
 
+// COLLECITONS
+const users = () => getDB().collection('users');
+const groups = () => getDB().collection('groups');
+const channels = () => getDB().collection('channels');
+
+// safe projection
+const SAFE = { projection: { _id: 0, password: 0 } };
+
 // GET all users (SUPERADMIN only) ---------------------------------------------------------------------------
 router.get('/users', async (req, res) => {
-	// VERIFY THE OWNER -- TODO
-
-	const users = await readJson('users.json');
-	const safeUsers = users.map((u) => {
-		const { password: _discarded, ...safeUser } = u;
-		return safeUser;
-	});
-	res.json(safeUsers);
+	res.json(await users().find({}, SAFE).toArray());
 });
 
 // GET:id -- user by id (PUBLIC FOR GROUPS or SEARCH) --------------------------------------------------------
 router.get('/users/:id', async (req, res) => {
-	const users = await readJson('users.json');
-	const user = users.find((u) => u.id === req.params.id);
+	const user = await users().findOne({ id: req.params.id }, SAFE);
 	if (!user) return res.status(404).json({ error: 'Not found' });
-
-	const { password: _discarded, ...safeUser } = user;
-	res.json(safeUser);
+	res.json(user);
 });
 
 // DELETE user account (SAME USER ONLY) ----------------------------------------------------------------------
 router.delete('/users/:id', async (req, res) => {
-	// VERIFY THE OWNER -- TODO
+	const id = req.params.id;
 
-	const users = await readJson('users.json');
+	// DELETE USER FROM ALL THEIR GROUPS
+	const { deletedCount } = await users().deleteOne({ id });
+	if (deletedCount === 0) return res.status(404).json({ error: 'Not found' });
 
-	const index = users.findIndex((u) => u.id === req.params.id);
-	if (index === -1) return res.status(404).json({ error: 'Not found' });
+	// DELETE USER FROM ALL THEIR CHANNELS
+	const pullUser = { $pull: { memberIds: id, adminIds: id } };
+	await groups().updateMany({}, pullUser);
+	await channels().updateMany({}, pullUser);
 
-	// DELETE USER FROM ALL THEIR GROUPS -- TODO
-	// DELETE USER FROM ALL THEIR CHANNELS -- TODO
-	// DELETE USER'S MESSAGES FROM ALL CHANNELS -- TODO
-
-	// DELETE USER FROM USERS LIST
-	users.splice(index, 1);
-	await writeJson('users.json', users);
+	// DELETE USER'S MESSAGES FROM ALL CHANNELS
+    removeUserMessages(id);
 
 	res.status(204).send();
 });
 
 // PATCH update user (SAME USER ONLY) -----------------------------------------------------------------------
 router.patch('/users/:id', async (req, res) => {
-	// VERIFY THE OWNER -- TODO
+	const { displayName, avatarUrl, password } = req.body ?? {};
 
-	const id = req.params.id;
-	const { displayName, avatarUrl, password } = req.body;
+	// only fields that were sent and not empty
+	const changes = {};
+	if (typeof displayName === 'string' && displayName.trim()) changes.displayName = displayName.trim();
+	if (typeof avatarUrl === 'string' && avatarUrl.trim()) changes.avatarUrl = avatarUrl.trim();
+	if (typeof password === 'string' && password.trim()) changes.password = password.trim();
 
-	const users = await readJson('users.json');
-	const index = users.findIndex((u) => u.id === id);
-	if (index === -1) return res.status(404).json({ error: 'User not found' });
+	if (!Object.keys(changes).length) return res.status(400).json({ error: 'No data provided' });
 
-	const user = users[index];
-    user = { 
-        ...user,
-        displayName: displayName || user.displayName,
-        avatarUrl: avatarUrl || user.avatarUrl,
-        password: password || user.password,
-    };
-	await writeJson('users.json', users);
+	// $set changes only given fields, returns doc after update
+	const updatedUser = await users().findOneAndUpdate(
+		{ id: req.params.id },
+		{ $set: changes },
+		{ returnDocument: 'after', ...SAFE },
+	);
+	if (!updatedUser) return res.status(404).json({ error: 'User not found' });
 
-	const { password: _, ...safeUser } = users[index];
-	res.json(safeUser);
+	res.json(updatedUser);
 });
 
 module.exports = router; // export endpoint

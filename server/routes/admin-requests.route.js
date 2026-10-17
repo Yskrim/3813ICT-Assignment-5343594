@@ -1,13 +1,18 @@
-const express = require('express'); //express support
-const { readJson, writeJson } = require('../utils'); //r/w methods
+const express = require('express');
+const { getDB } = require('../db');
 
-const router = express.Router(); // new router
+const router = express.Router();
+
+// collection
+const requests = () => getDB().collection('adminRequests');
+
+const NO_ID = { projection: { _id: 0 } };
+const REVIEW_STATUSES = ['approved', 'rejected'];
 
 // GET all admin-requests -- ADMIN ALL REQUESTS
 router.get('/admin-requests', async (req, res) => {
 	try {
-		const adminRequests = await readJson('admin-requests.json');
-		res.status(200).json(adminRequests);
+		res.json(await requests().find({}, NO_ID).toArray());
 	} catch (err) {
 		res.status(500).json({ error: 'Storage error' });
 	}
@@ -16,14 +21,9 @@ router.get('/admin-requests', async (req, res) => {
 // GET specific admin-requests/:id -- ADMIN SEARCH FOR REQUEST
 router.get('/admin-requests/:id', async (req, res) => {
 	try {
-		// read file
-		const adminRequests = await readJson('admin-requests.json');
-
-		const request = adminRequests.find((admReq) => admReq.id === req.params.id);
+		const request = await requests().findOne({ id: req.params.id }, NO_ID);
 		if (!request) return res.status(404).json({ error: 'Not found' });
-
-		// return json
-		res.status(200).json(request);
+		res.json(request);
 	} catch (err) {
 		res.status(500).json({ error: 'Storage error' });
 	}
@@ -31,36 +31,24 @@ router.get('/admin-requests/:id', async (req, res) => {
 
 // PATCH update existing record -- ADMIN APPROVE/DENY REQUEST
 router.patch('/admin-requests/:id', async (req, res) => {
-	const { reviewedBy, status } = req.body;
+	const { reviewedBy, status } = req.body ?? {};
+	if (!REVIEW_STATUSES.includes(status)) {
+		return res.status(400).json({ error: 'status must be approved or rejected' });
+	}
 
 	try {
-		// Get all adminRequests
-		const adminRequests = await readJson('admin-requests.json');
-		if (!adminRequests.some((r) => r.id === req.params.id)) return res.status(404).json({ error: 'Request not found' });
+		// only pending can be reviewed, check\update in one step
+		const updated = await requests().findOneAndUpdate(
+			{ id: req.params.id, status: 'pending' },
+			{ $set: { status, reviewedBy, reviewedAt: new Date().toISOString() } },
+			{ returnDocument: 'after', ...NO_ID },
+		);
+		if (updated) return res.json(updated);
 
-		// PERFORM THE HANDLER FOR ADMIN ACTION IF STATUS IS 'APPROVED' ---------------------------------------------------
-		if (status === 'APPROVE') {
-			// RUN THE COMMAND
-			return;
-		}
-
-		// id comes last so the body can't overwrite it
-		const newRequests = adminRequests.map((r) => {
-			return r.id === req.params.id
-				? {
-						...r,
-						status,
-						reviewedBy,
-						reviewedAt: String(new Date.now()),
-					}
-				: r;
-		});
-
-		// Write updated requests back to file
-		await writeJson('admin-requests.json', newRequests);
-
-		// Respond with the updated request
-		res.status(200).json(newRequests.find((r) => r.id === req.params.id));
+		// not updated: unknown id or already reviewed
+		const exists = await requests().countDocuments({ id: req.params.id }, { limit: 1 });
+		if (!exists) return res.status(404).json({ error: 'Request not found' });
+		res.status(409).json({ error: 'Request already reviewed' });
 	} catch (err) {
 		res.status(500).json({ error: 'Storage error' });
 	}
@@ -85,38 +73,41 @@ const REQUIRED_FIELDS = {
 	revokeAdmin: ['targetUserId', 'targetGroupId'],
 };
 
-// POST new request -- FOR USERS OTHER THAN SUPER ADMIN ---------------------------------------------------------------------------------------
+// POST new request -- FOR USERS OTHER THAN SUPER ADMIN --------------------------------------------------------------------------------
 router.post('/admin-requests', async (req, res) => {
-	// take min data from the req body
-	const { type, issuerId } = req.body;
-	if (!type || !issuerId) return res.status(400).json({ error: 'type and issuerId are required' });
+	const { type, issuerId, note } = req.body ?? {};
+	if (!type || !issuerId) {
+		return res.status(400).json({ error: 'type and issuerId are required' });
+	}
 
-	// pick what do we need from the body for request
 	const requiredFields = REQUIRED_FIELDS[type];
 	if (!requiredFields) return res.status(400).json({ error: 'Unknown type' });
 
 	// check if anything is missing
 	const missing = requiredFields.filter((f) => !req.body[f]);
-	if (missing.length) return res.status(400).json({ error: `Missing: ${missing.join(', ')}` });
+	if (missing.length) {
+		return res.status(400).json({ error: `Missing: ${missing.join(', ')}` });
+	}
+
+	// copy only required fields of this type from body
+	const typeFields = Object.fromEntries(requiredFields.map((f) => [f, req.body[f]]));
+
+	const newRequest = {
+		id: String(Date.now()),
+		type,
+		issuerId,
+		...typeFields,
+		note: typeof note === 'string' ? note.trim() : '',
+		status: 'pending',
+		createdAt: new Date().toISOString(),
+		reviewedBy: null,
+		reviewedAt: null,
+	};
 
 	try {
-		// compose a new request
-		const newRequest = {
-			type,
-			issuerId,
-			...requiredFields,
-			note: note ?? '',
-			id: String(Date.now()),
-			status: 'pending',
-			createdAt: new Date().toISOString(),
-			reviewedBy: null,
-			reviewedAt: null,
-		};
-
-		const adminRequests = await readJson('admin-requests.json'); // read current requests state
-		adminRequests.push(newRequest); // update the stored file
-		await writeJson('admin-requests.json', adminRequests);
-		res.status(201).json(newRequest); // 201 == created, send the new request
+		// insertOne adds _id to object -> insert a copy
+		await requests().insertOne({ ...newRequest });
+		res.status(201).json(newRequest);
 	} catch (err) {
 		res.status(500).json({ error: 'Storage error' });
 	}
