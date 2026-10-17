@@ -147,21 +147,63 @@ describe('POST /api/groups', () => {
 
 // channels write ---
 describe('POST /api/channels', () => {
-    it('creates channel with group members by default', async () => {
-      const res = await request(app)
-        .post('/api/channels')
-        .send({ name: 'random', groupId: '1' });
+	it('creates channel with group members by default', async () => {
+		const res = await request(app).post('/api/channels').send({ name: 'random', groupId: '1' });
 
-      assert.strictEqual(res.status, 201);
-      assert.strictEqual(res.body.groupId, '1');
-      assert.ok(res.body.memberIds.length > 0);
-    });
+		assert.strictEqual(res.status, 201);
+		assert.strictEqual(res.body.groupId, '1');
+		assert.ok(res.body.memberIds.length > 0);
+	});
 
-    it('returns 404 for unknown group', async () => {
-      const res = await request(app)
-        .post('/api/channels')
-        .send({ name: 'random', groupId: '999' });
+	it('returns 404 for unknown group', async () => {
+		const res = await request(app).post('/api/channels').send({ name: 'random', groupId: '999' });
 
-      assert.strictEqual(res.status, 404);
-    });
-  });
+		assert.strictEqual(res.status, 404);
+	});
+});
+
+// admin requests ---
+describe('admin requests', () => {
+	it('creates request with only fields of its type', async () => {
+		const res = await request(app).post('/api/admin-requests').send({
+			type: 'createChannel',
+			issuerId: '3',
+			targetGroupId: '1',
+			proposedChannelName: 'memes',
+			extra: 'should be ignored',
+		});
+
+		assert.strictEqual(res.status, 201);
+		assert.strictEqual(res.body.status, 'pending');
+		assert.strictEqual(res.body.proposedChannelName, 'memes');
+		assert.strictEqual(res.body.extra, undefined);
+	});
+
+	it('rejects request with missing fields (400)', async () => {
+		const res = await request(app).post('/api/admin-requests').send({ type: 'kickUser', issuerId: '3', targetGroupId: '1' });
+
+		assert.strictEqual(res.status, 400);
+	});
+
+	it('approves pending request once, second review is 409', async () => {
+		const created = await request(app).post('/api/admin-requests').send({
+			type: 'banUser',
+			issuerId: '2',
+			targetUserId: '4',
+		});
+		const id = created.body.id;
+
+		const first = await request(app).patch(`/api/admin-requests/${id}`).send({ status: 'approved', reviewedBy: '1' });
+		assert.strictEqual(first.status, 200);
+		assert.strictEqual(first.body.status, 'approved');
+
+		const second = await request(app).patch(`/api/admin-requests/${id}`).send({ status: 'rejected', reviewedBy: '1' });
+		assert.strictEqual(second.status, 409);
+	});
+
+	it('rejects unknown status (400)', async () => {
+		const res = await request(app).patch('/api/admin-requests/1').send({ status: 'maybe', reviewedBy: '1' });
+
+		assert.strictEqual(res.status, 400);
+	});
+});
