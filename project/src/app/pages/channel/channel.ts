@@ -33,13 +33,18 @@ export class ChannelPage implements OnInit, OnDestroy {
 	protected channel = signal<Channel | undefined>(undefined);
 	protected messages = signal<Message[]>([]);
 	protected members = signal<User[]>([]);
-    // senderId == username, rebuilds when members change
+	// senderId == username, rebuilds when members change
 	protected memberNames = computed(() => new Map(this.members().map((m) => [m.id, m.username])));
 	protected isLoading = signal(true);
 
 	//subscriptions -- move to own interface - TODO
 	private messageSub?: Subscription;
 	private historySub?: Subscription;
+	private noticeSub?: Subscription;
+	private noticeTimer?: ReturnType<typeof setTimeout>;
+
+	// join / leave notice, shown for 3s
+	protected notice = signal('');
 
 	protected msgInputForm = new FormGroup({ message: new FormControl('') });
 	protected groupId = '';
@@ -68,6 +73,12 @@ export class ChannelPage implements OnInit, OnDestroy {
 		this.historySub = this.socket.getHistory().subscribe((history) => this.messages.set(history));
 
 		this.messageSub = this.socket.getMessages().subscribe((message) => this.messages.update((prev) => [...prev, message]));
+		// join / leave notices, hide after 3s (new notice restarts timer)
+		this.noticeSub = this.socket.getNotices().subscribe((notice) => {
+			this.notice.set(notice);
+			clearTimeout(this.noticeTimer);
+			this.noticeTimer = setTimeout(() => this.notice.set(''), 3000);
+		});
 
 		// SUBSCRIBE TO CHANGE IN ROUTER PARAMS
 		this.route.paramMap
@@ -82,7 +93,8 @@ export class ChannelPage implements OnInit, OnDestroy {
 					this.groupId = params.get('gId') ?? '';
 					this.channelId = params.get('cId') ?? '';
 
-					this.socket.join(this.channelId); // join the new room
+					const name = this.user()?.username || 'Someone';
+					this.socket.join(this.channelId, name); // join the new room
 				}),
 				tap({ subscribe: () => this.isLoading.set(true) }), // start process rule
 
@@ -112,5 +124,7 @@ export class ChannelPage implements OnInit, OnDestroy {
 		this.socket.leave(this.channelId);
 		this.messageSub?.unsubscribe();
 		this.historySub?.unsubscribe();
+		this.noticeSub?.unsubscribe();
+		clearTimeout(this.noticeTimer);
 	}
 }

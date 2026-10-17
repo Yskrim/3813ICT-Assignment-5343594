@@ -41,6 +41,11 @@
 			<p class="text-center opacity-50 my-auto">No messages yet. Say hi!</p>
 		}
 	</div>
+  
+  <!-- join / leave notice -->
+  @if (notice()) {
+    <div class="text-center small text-body-secondary pt-2">{{ notice() }}</div>
+  }
 
 	<!-- channel input group -->
 	<div class="pt-3">

@@ -12,14 +12,21 @@ function connect(io) {
 		console.log('Connected: ', socket.id);
 
 		// enter room
-		socket.on('join', (channelId) => {
+		socket.on('join', ({channelId, username} = {}) => {
+            if(typeof channelId !=='string' || !channelId) return;
+
+            socket.data.username = 
+                typeof username === 'string' && username ? username : 'Someone';
+            
 			socket.join(channelId);
 			socket.emit('history', history[channelId] ?? []); // send last 5 to new user
+			socket.to(channelId).emit('notice', `${socket.data.username} joined the channel`);
 		});
-
+        
 		// leave room
 		socket.on('leave', (channelId) => {
-			socket.leave(channelId);
+            socket.to(channelId).emit('notice',`${socket.data.username} left the channel`);
+            socket.leave(channelId);
 		});
 
 		// message
@@ -36,7 +43,13 @@ function connect(io) {
         });
 
 		// disconnect
-		socket.on('disconnect', () => console.log('Disconnected:', socket.id));
+        socket.on('disconnecting', () => {
+            for (const room of socket.rooms) {
+                if (room !== socket.id) {
+                    socket.to(room).emit('notice', `${socket.data.username} disconnected`);
+                }
+            }
+        });
 	});
 }
 

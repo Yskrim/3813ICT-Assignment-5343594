@@ -15,8 +15,8 @@ export class SocketService {
 		return this.listen<Message>('message');
 	}
 
-	join(channelId: string): void {
-		this.socket.emit('join', channelId);
+	join(channelId: string, username: string): void {
+		this.socket.emit('join', {channelId, username});
 	}
 
 	leave(channelId: string): void {
@@ -26,6 +26,10 @@ export class SocketService {
 	getHistory(): Observable<Message[]> {
 		return this.listen<Message[]>('history');
 	}
+
+    getNotices(): Observable<string> {
+        return this.listen<string>('notice');
+    }
 
 	private listen<T>(event: string): Observable<T> {
 		return new Observable<T>((observer) => {
