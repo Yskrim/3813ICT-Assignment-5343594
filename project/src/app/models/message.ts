@@ -1,6 +1,6 @@
 export interface Message {
     id: string
-    chatId: string
+    channelId: string
     senderId: string
     text: string
     imageUrl?: string

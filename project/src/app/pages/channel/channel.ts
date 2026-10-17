@@ -1,14 +1,15 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
+import { Location } from '@angular/common';
+
 import { Group, Channel, Message, User } from '../../models';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
-import { MessageService } from '../../services/message.service';
-import { Location } from '@angular/common';
-import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
+import { SocketService } from '../../services/socket.service';
 
 @Component({
 	imports: [RouterLink, ReactiveFormsModule],
@@ -16,91 +17,83 @@ import { UserService } from '../../services/user.service';
 	styleUrl: './channel.css',
 	templateUrl: './channel.html',
 })
-export class ChannelPage implements OnInit {
+export class ChannelPage implements OnInit, OnDestroy {
+	// CLEAR DEPENDENCIES -- TODO --------------------------------------------------------------------------------
 	private route = inject(ActivatedRoute);
 	private groupService = inject(GroupService);
 	private channelService = inject(ChannelService);
-	private messageService = inject(MessageService);
 	private userService = inject(UserService);
 	private authService = inject(AuthService);
+	private socket = inject(SocketService);
 	private location = inject(Location);
 
-	gId = '';
-	cId = '';
-	user!: User;
+	private messageSub?: Subscription;
+	private historySub?: Subscription;
 
-	group = signal<Group | undefined>(undefined);
-	channel = signal<Channel | undefined>(undefined);
-	messages = signal<Message[]>([]);
-	members = signal<User[]>([]);
-	loading = signal(true);
+	// READ VALUES FROM IMPORTED SERVICES -- TODO ---------------------------------------------------------------------------
+	protected user = this.authService.currentUser;
+	protected group = signal<Group | undefined>(undefined);
+	protected channel = signal<Channel | undefined>(undefined);
+	protected messages = signal<Message[]>([]);
+	protected members = signal<User[]>([]);
+	protected isLoading = signal(true);
 
-	form = new FormGroup({
-		message: new FormControl(''),
-	});
+	protected form = new FormGroup({ message: new FormControl('') });
+	protected groupId = '';
+	protected channelId = '';
 
-	constructor() {}
-
-	goBack(): void {
+	protected goBack(): void {
 		this.location.back();
 	}
 
-	handleSubmit() {
-		const text = this.form.value.message;
-		if (!text) return;
+	// send -------------------------------------------------------------------------------------------------------------
+	send(): void {
+		const text = this.form.value.message?.trim();
+		const user = this.user();
+		if (!text || !user) return;
 
-		const user = this.authService.currentUser();
-		if (!user) return;
-
-		// send
-		this.messageService.sendMessage(this.cId, user.id, text);
-
-		// rerender
-		this.messages.set(this.messageService.getMessagesForChannel(this.cId));
+		this.socket.send({ channelId: this.channelId, senderId: user.id, text } as any);
 		this.form.reset();
 	}
 
-	deleteMessage(messageId: string): void {
-		const user = this.authService.currentUser();
-		if (!user) return;
-
-		const deleted = this.messageService.deleteMessage(this.cId, user.id, messageId);
-		if (!deleted) return;
-
-		this.messages.set(this.messageService.getMessagesForChannel(this.cId));
+	delete(messageId: string): void {
+		return;
 	}
 
 	ngOnInit() {
-		this.gId = this.route.snapshot.paramMap.get('gId')!;
-		this.cId = this.route.snapshot.paramMap.get('cId')!;
+        this.groupId = this.route.snapshot.paramMap.get('gId')!;
+        this.channelId = this.route.snapshot.paramMap.get('cId')!;
 
-		const user = this.authService.currentUser();
-		if (!user) {
-			throw new Error('User not found.');
-		}
-		this.user = user;
+		this.loadChannelData();
 
-		// get group and channel data in parallel
-		forkJoin([this.groupService.getById(this.gId), this.channelService.getById(this.cId)]).subscribe({
+		// subscribe to receiving messages and history from socket --------------------------------------------------------------------------
+		this.messageSub = this.socket.getMessages().subscribe((message) => this.messages.update((prev) => [...prev, message]));
+		this.historySub = this.socket.getHistory().subscribe((history) => this.messages.set(history));
+		this.socket.join(this.channelId); // join the room
+	}
+
+	ngOnDestroy() {
+		// unsubscribe from socket --------------------------------------------------------------------------------------------
+		this.socket.leave(this.channelId);
+		this.messageSub?.unsubscribe();
+		this.historySub?.unsubscribe();
+	}
+
+	private loadChannelData(): void {
+		forkJoin([this.groupService.getById(this.groupId), this.channelService.getById(this.channelId)]).subscribe({
 			next: ([group, channel]) => {
 				this.group.set(group);
 				this.channel.set(channel);
-				this.messages.set(this.messageService.getMessagesForChannel(this.cId));
+				this.isLoading.set(false);
 
-				// getByIdsList returns Observable<User[]>, need to subscribe to get members
 				this.userService.getByIds(channel.memberIds).subscribe({
-					next: (members) => {
-						this.members.set(members);
-					},
-					error: () => {
-						this.members.set([]);
-					},
+					next: (members) => this.members.set(members),
+					error: () => this.members.set([]),
+                    complete: () => console.log('members loaded')
 				});
-				this.loading.set(false);
 			},
-			error: () => {
-				this.loading.set(false);
-			},
+			error: () => this.isLoading.set(false),
+            complete: () => console.log('all data loaded\n', this.messages())
 		});
 	}
 }
