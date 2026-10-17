@@ -35,11 +35,27 @@ app.use(express.json());
 app.use('/api', require('./routes')); // attach /api to routes defined under /api.
 
 // start server ------------------------------------------------------------------------------------------------------
-httpServer
-	.listen(PORT, () => {
-		console.log(`Server is running on http://localhost:${PORT}`);
-	})
-	.on('error', (err) => {
-		console.log('Server failed to start');
-		if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
-	});
+// httpServer
+// 	.listen(PORT, () => {
+// 		console.log(`Server is running on http://localhost:${PORT}`);
+// 	})
+// 	.on('error', (err) => {
+// 		console.log('Server failed to start');
+// 		if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
+// 	});
+
+
+// start test server
+if (require.main === module) {
+	httpServer
+		.listen(PORT, () => {
+			console.log(`Server is running on http://localhost:${PORT}`);
+		})
+		.on('error', (err) => {
+			console.log('Server failed to start');
+			if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
+		});
+}
+
+// export for tests 
+module.exports = app;

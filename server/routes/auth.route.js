@@ -7,16 +7,16 @@ const router = express.Router(); // new router
 router.post('/auth/login', async (req, res) => {
 	// read body
     const { username, password } = req.body;
-    if (!username) res.status(400).json({ error: 'Missing username' });
-	if (!password) res.status(400).json({ error: 'Missing password' });
+    if (!username) return res.status(400).json({ error: 'Missing username' });
+	if (!password) return res.status(400).json({ error: 'Missing password' });
 
     // trim strings
     const usrn = username.trim();
 	const pwd = password.trim();
 
     // empty string check
-	if (!usrn) res.status(400).json({ error: 'Missing username' });
-	if (!pwd) res.status(400).json({ error: 'Missing password' });
+	if (!usrn) return res.status(400).json({ error: 'Missing username' });
+	if (!pwd) return res.status(400).json({ error: 'Missing password' });
 
 	try {
 		const users = await readJson('users.json');
