@@ -1,63 +1,16 @@
 <!-- home: sidebar with groups + channels, main area empty state -->
 <div class="home container-fluid pb-3">
-	<div class="row g-3 h-100">
-		<!-- sidebar ------------------------------------------------------------------------->
-		<aside class="col-12 col-md-4 col-lg-3 h-100">
-			<div class="card h-100">
-				
-        <!-- current user -->
-				<div class="card">
-					<div class="flex-grow-1">
-						<div class="fw-semibold">{{ user()?.username }}</div>
-						<small class="text-success">online</small>
-					</div>
-				</div>
+	<div class="d-flex h-100">
+		<app-sidebar [groups]="groups()" [channelsByGroup]="channelsByGroup()"></app-sidebar>
 
-				<!-- search  -->
-				<div class="p-3 pb-2">
-					<input type="search" class="form-control" placeholder="search" aria-label="Search" />
-				</div>
-
-				<!-- groups with nested channels -->
-				<nav class="card-body overflow-auto px-2 pt-0" aria-label="Groups">
-					<p class="text-uppercase text-body-secondary small fw-semibold px-2 mb-2">Groups</p>
-
-					@for (group of groups(); track group.id) {
-						<section class="mb-2 card">
-							<a [routerLink]="['/groups', group.id]" class="d-flex align-items-center gap-2 p-2">
-								<span class="flex-grow-1 fw-semibold">{{ group.name }}</span>
-								<span class="">{{ (channelsByGroup()[group.id] ?? []).length }}</span>
-							</a>
-
-							<!-- channels -->
-							<ul class="">
-								@for (ch of channelsByGroup()[group.id] ?? []; track ch.id) {
-									<li class="nav-item">
-										<a [routerLink]="['/home/groups', group.id, 'channels', ch.id]">
-											<span class="">{{ ch.name }}</span>
-										</a>
-									</li>
-								} @empty {
-									<li class="">No channels yet</li>
-								}
-							</ul>
-						</section>
-					} @empty {
-						<p class="">You are not in any group yet.</p>
-					}
-				</nav>
-			</div>
-		</aside>
-
-		<!-- main ------------------------------------------------------------------------------>
 		<main class="col-md-8 col-lg-9 h-100">
-      <router-outlet #homeOutlet="outlet"></router-outlet>
-      @if(!homeOutlet.isActivated) {
-        <div >
-          <h4 class="">Select a channel</h4>
-          <p class="">Pick a channel on the left to start chatting with your group.</p>
-        </div>
-      }
+			<router-outlet #homeOutlet="outlet"></router-outlet>
+			@if (!homeOutlet.isActivated) {
+				<div class="card h-100 d-flex flex-column justify-content-center align-items-center ms-3 rounded-4">
+					<h4 class="mb-2">Select a channel</h4>
+					<p class="text-body-secondary">Pick a channel on the left to start chatting with your group.</p>
+				</div>
+			}
 		</main>
 	</div>
 </div>

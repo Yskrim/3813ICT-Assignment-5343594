@@ -1,0 +1,54 @@
+<!-- sidebar -->
+<div class="card h-100 rounded-4">
+	<!-- current user -->
+	<div class="d-flex align-items-center gap-3 p-3 border-bottom">
+		<img class="rounded-circle object-fit-cover flex-shrink-0" [src]="user()?.avatarUrl" width="44" height="44" />
+		<div>
+			<div class="fw-semibold">{{ user()?.username }}</div>
+			<small class="text-success">online</small>
+		</div>
+	</div>
+
+	<!-- search -->
+	<div class="p-3">
+		<input type="search" class="form-control form-control-sm" placeholder="Search" aria-label="Search" />
+	</div>
+
+	<!-- groups with nested channels -->
+	<nav class="card-body overflow-auto px-2 pt-0" aria-label="Groups">
+		<p class="text-uppercase text-body-secondary small fw-semibold px-2 mb-2">Groups</p>
+
+		@for (group of groups(); track group.id) {
+			<section class="my-3">
+				<a
+					[routerLink]="['/groups', group.id]"
+					class="d-flex align-items-center px-2 py-1 text-body text-decoration-none bg-body-tertiary rounded-3"
+				>
+					<span class="flex-grow-1 fw-semibold">{{ group.name }}</span>
+					<span class="badge rounded-pill text-bg-light">
+						{{ (channelsByGroup()[group.id] ?? []).length }}
+					</span>
+				</a>
+
+				<!-- channels -->
+				<ul class="nav nav-pills flex-column ms-2">
+					@for (ch of channelsByGroup()[group.id] ?? []; track ch.id) {
+						<li class="nav-item">
+							<a
+								class="nav-link py-1 small"
+								routerLinkActive="active"
+								[routerLink]="['/home/groups', group.id, 'channels', ch.id]"
+							>
+								# {{ ch.name }}
+							</a>
+						</li>
+					} @empty {
+						<li class="small text-body-secondary px-3 py-1">No channels yet</li>
+					}
+				</ul>
+			</section>
+		} @empty {
+			<p class="small text-body-secondary px-2">You are not in any group yet.</p>
+		}
+	</nav>
+</div>
