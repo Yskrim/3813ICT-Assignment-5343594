@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular
 import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin, map, Subscription, switchMap, tap } from 'rxjs';
-import { Location } from '@angular/common';
+import { Location, DatePipe } from '@angular/common';
 
 import { Group, Channel, Message, User } from '../../models';
 import { GroupService } from '../../services/group.service';
@@ -12,7 +12,7 @@ import { UserService } from '../../services/user.service';
 import { SocketService } from '../../services/socket.service';
 
 @Component({
-	imports: [RouterLink, ReactiveFormsModule],
+	imports: [RouterLink, ReactiveFormsModule, DatePipe],
 	selector: 'app-channel',
 	styleUrl: './channel.css',
 	templateUrl: './channel.html',
@@ -33,6 +33,8 @@ export class ChannelPage implements OnInit, OnDestroy {
 	protected channel = signal<Channel | undefined>(undefined);
 	protected messages = signal<Message[]>([]);
 	protected members = signal<User[]>([]);
+    // senderId == username, rebuilds when members change
+	protected memberNames = computed(() => new Map(this.members().map((m) => [m.id, m.username])));
 	protected isLoading = signal(true);
 
 	//subscriptions -- move to own interface - TODO
@@ -67,45 +69,42 @@ export class ChannelPage implements OnInit, OnDestroy {
 
 		this.messageSub = this.socket.getMessages().subscribe((message) => this.messages.update((prev) => [...prev, message]));
 
+		// SUBSCRIBE TO CHANGE IN ROUTER PARAMS
+		this.route.paramMap
+			.pipe(
+				tap((params) => {
+					//leave other room before joining new
+					if (this.channelId) this.socket.leave(this.channelId);
+					//clear message history
+					this.messages.set([]);
 
-        // SUBSCRIBE TO CHANGE IN ROUTER PARAMS
-		this.route.paramMap.pipe(
-			tap((params) => {
-                //leave other room before joining new
-				if (this.channelId) this.socket.leave(this.channelId); 
-				//clear message history
-                this.messages.set([]); 
+					// store current params
+					this.groupId = params.get('gId') ?? '';
+					this.channelId = params.get('cId') ?? '';
 
-                // store current params
-				this.groupId = params.get('gId') ?? '';
-				this.channelId = params.get('cId') ?? '';
+					this.socket.join(this.channelId); // join the new room
+				}),
+				tap({ subscribe: () => this.isLoading.set(true) }), // start process rule
 
-				this.socket.join(this.channelId); // join the new room
-			}),
-            tap({ subscribe: () => this.isLoading.set(true)}), // start process rule
-			
-            // OBSERVABLE CHAIN LINK 1
-            switchMap(() => 
-				forkJoin({
-					group: this.groupService.getById(this.groupId),
-					channel: this.channelService.getById(this.channelId),
-				}).pipe(
-                    // OBSERVABLE CHAIN LINK 2
-					switchMap(({ group, channel }) => 
-						this.userService.getByIds(channel.memberIds)
-                        .pipe(
-                            map((members) => ({ group, channel, members }))
-                        ),
+				// OBSERVABLE CHAIN LINK 1
+				switchMap(() =>
+					forkJoin({
+						group: this.groupService.getById(this.groupId),
+						channel: this.channelService.getById(this.channelId),
+					}).pipe(
+						// OBSERVABLE CHAIN LINK 2
+						switchMap(({ group, channel }) =>
+							this.userService.getByIds(channel.memberIds).pipe(map((members) => ({ group, channel, members }))),
+						),
+						finalize(() => this.isLoading.set(false)), // finish process rule
 					),
-                    finalize(() => this.isLoading.set(false)), // finish process rule
 				),
-			),
-            
-		).subscribe(({ group, channel, members }) => {
-            this.group !== null && this.group.set(group);
-            this.channel.set(channel);
-            this.members.set(members);
-        });
+			)
+			.subscribe(({ group, channel, members }) => {
+				this.group !== null && this.group.set(group);
+				this.channel.set(channel);
+				this.members.set(members);
+			});
 	}
 
 	ngOnDestroy() {
