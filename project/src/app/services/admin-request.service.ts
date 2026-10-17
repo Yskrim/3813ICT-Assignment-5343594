@@ -5,11 +5,10 @@ import { ADMIN_REQUEST_SCOPE } from '../models';
 import { ChannelService } from './channel.service';
 import { GroupService } from './group.service';
 import { Observable, map, of, switchMap } from 'rxjs';
-import { apiURL } from '../app.config';
 
 @Injectable({ providedIn: 'root' })
 export class AdminRequestService {
-    private readonly requestsUrl = `${apiURL}/admin-requests`;
+    private readonly requestsUrl = `/api/admin-requests`;
 
     constructor(
         private http: HttpClient,

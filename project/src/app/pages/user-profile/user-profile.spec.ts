@@ -1,3 +1,4 @@
+import { testProviders, loginAs } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserProfile } from './user-profile';
 
@@ -6,8 +7,10 @@ describe('UserProfile', () => {
   let fixture: ComponentFixture<UserProfile>;
 
   beforeEach(async () => {
+    loginAs();
     await TestBed.configureTestingModule({
       imports: [UserProfile],
+      providers: testProviders,
     }).compileComponents();
 
     fixture = TestBed.createComponent(UserProfile);
