@@ -6,35 +6,58 @@ import { Group } from '../models';
 @Injectable({ providedIn: 'root' })
 export class GroupService {
 	private http = inject(HttpClient);
-	private readonly url = '/api/groups';
+	private readonly endpointUri = '/api/groups';
 
 	// cache of the last server answer for the current user
-	readonly myGroups = signal<Group[]>([]);
+	readonly allGroupsState = signal<Group[]>([]);
+	readonly userGroupsState = signal<Group[]>([]);
+	readonly searchGroupsState = signal<Group | null>(null);
 
 	// all groups in the system (superAdmin)
 	getAll(): Observable<Group[]> {
-		return this.http.get<Group[]>(this.url);
+		const getAll$ = this.http
+            .get<Group[]>(this.endpointUri)
+            .pipe(
+                tap((data)=> this.userGroupsState.set(data as Group[]))
+            );
+        
+        return getAll$;
 	}
 
 	// groups where the user is a member or an admin
 	getForUser(userId: string): Observable<Group[]> {
-		return this.http
-			.get<Group[]>(this.url, { params: { userId } })
-			.pipe(tap((groups) => this.myGroups.set(groups)));
+		const getForUser$ = this.http
+			.get<Group[]>(this.endpointUri, { params: { userId } })
+			.pipe(
+                tap((userGroups) => this.userGroupsState.set(userGroups as Group[]))
+            );
+        
+        return getForUser$;
 	}
 
 	getById(id: string): Observable<Group> {
-		return this.http.get<Group>(`${this.url}/${id}`);
+        const getForSearch$ = this.http
+            .get<Group>(`${this.endpointUri}/${id}`)
+            .pipe(
+                tap((responseGroup) => this.searchGroupsState.set(responseGroup))
+            );
+
+        return getForSearch$;
 	}
 
 	create(name: string): Observable<Group> {
-		return this.http
-			.post<Group>(this.url, { name })
-			.pipe(tap((newGroup) => this.myGroups.update((prev) => [...prev, newGroup])));
+		const create$ = this.http
+			.post<Group>(this.endpointUri, { name })
+			.pipe(
+                tap((newGroup) => this.userGroupsState.update((prev) => [...prev, newGroup]))
+            );
+        return create$;
 	}
 
 	// on logout the next user doesnt see these groups
 	clear(): void {
-		this.myGroups.set([]);
+		this.allGroupsState.set([]);
+		this.userGroupsState.set([]);
+		this.searchGroupsState.set(null);
 	}
 }
