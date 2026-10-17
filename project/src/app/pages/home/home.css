@@ -1,9 +1,40 @@
-.group-heading {
-  border-bottom: 1px solid var(--bs-border-color);
+/* layout ------------------------------------------------------------------------------------------------------ */
+/* full height minus navbar + its mb-4 margin, adjust if navbar changes */
+.home {
+	height: calc(100vh - 80px);
 }
 
+/* phone: sidebar grows with content, no fixed height */
+@media (max-width: 767.98px) {
+	.home {
+		height: auto;
+	}
+}
 
-.channel-preview {
-  display: flex;
-  gap: 0.75rem;
+/* avatars ------------------------------------------------------------------------------------------------------ */
+/* bootstrap has no fixed square size utils */
+.avatar {
+	width: 34px;
+	height: 34px;
+	flex-shrink: 0;
+}
+
+.avatar-lg {
+	width: 40px;
+	height: 40px;
+}
+
+.empty-icon {
+	width: 72px;
+	height: 72px;
+}
+
+/* hover ------------------------------------------------------------------------------------------------------ */
+/* bootstrap has no hover bg util for plain links */
+.list-hover {
+	transition: background-color 0.15s;
+}
+
+.list-hover:hover {
+	background-color: var(--bs-tertiary-bg);
 }

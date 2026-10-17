@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand bg-primary text-light mb-4">
-	<div class="container w-75">
+	<div class="container">
 		<div class="d-flex align-items-center gap-1 w-100">
 			@if (auth.currentUser(); as user) {
 				<a class="navbar-brand text-light me-3" routerLink="/home">App</a>
@@ -17,6 +17,6 @@
 		</div>
 	</div>
 </nav>
-<div class="container w-75">
+<div class="container p-0 h-100">
 	<router-outlet></router-outlet>
 </div>

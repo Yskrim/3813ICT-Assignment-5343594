@@ -1,6 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { AdminRequest, Channel } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -8,14 +8,28 @@ export class ChannelService {
 	private http = inject(HttpClient);
 	private readonly url = '/api/channels';
 
+    readonly groupChannelsState = signal<Channel[]>([]);
+    readonly currentChannelState = signal<Channel | null>(null);
+
 	getById(id: string): Observable<Channel> {
-		return this.http.get<Channel>(`${this.url}/${id}`);
+        const getCurrentChannel$ = this.http
+            .get<Channel>(`${this.url}/${id}`)
+            .pipe(
+                tap((data)=> this.currentChannelState.set(data as Channel))
+            );
+		return getCurrentChannel$;
 	}
 
 	// channels of a group visible to the user
 	// userId goes away once the server knows who is asking
 	getForGroup(groupId: string, userId: string): Observable<Channel[]> {
-		return this.http.get<Channel[]>(this.url, { params: { groupId, userId } });
+        const groupChannels$ = this.http
+            .get<Channel[]>(this.url, { params: { groupId, userId } })
+            .pipe(
+                tap((data)=> this.groupChannelsState.set(data as Channel[]))
+            );
+		
+        return groupChannels$;
 	}
 
 	// admins/members default to the group's on the server

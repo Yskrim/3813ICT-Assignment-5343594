@@ -1,12 +1,14 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Group, Channel, User } from '../../models';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Group, Channel } from '../../models';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
 import { AuthService } from '../../services/auth.service';
+import { Sidebar } from '../../components/sidebar/sidebar';
+import { concatMap, defaultIfEmpty, forkJoin, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
-	imports: [RouterLink],
+	imports: [RouterOutlet, Sidebar],
 	selector: 'app-home',
 	styleUrl: './home.css',
 	templateUrl: './home.html',
@@ -15,33 +17,34 @@ export class HomePage implements OnInit {
 	private groupService = inject(GroupService);
 	private channelService = inject(ChannelService);
 	private auth = inject(AuthService);
-	
-    groups = signal<Group[]>([]);
-	channelsByGroup = signal<Record<string, Channel[]>>({});
+	protected route = inject(ActivatedRoute);
 
-	constructor() {}
+	// page state -------------------------------------------------------------------------------------------
+	readonly user = this.auth.currentUser; // signal, for header
+	readonly groups = signal<Group[]>([]);
+	readonly channelsByGroup = signal<Record<string, Channel[]>>({});
 
+	// lifecycle ------------------------------------------------------------------------------------------
 	ngOnInit(): void {
-		const user = this.auth.currentUser()!;
+		const userId = this.user()?.id;
+		if (!userId) return;
 
 		// get groups
-		this.groupService.getForUser(user.id).subscribe((groups) => {
-			this.groups.set(groups);
-			console.log('groups length:', groups.length);
-			// For each group, fetch its channels and put in the map
-			this.channelsByGroup.set({});
+		this.groupService.getForUser(userId)
+			.pipe(
+				tap((groups) => this.groups.set(groups)),
 
-			groups.forEach((group) => {
-				this.channelService.getForGroup(group.id, user.id).subscribe((channels: Channel[]) => {
-					this.channelsByGroup.update((current) => ({
-						...current,
-						[group.id]: channels,
-					}));
-				});
+				// { groupId: getForGroup$ } -> forkJoin returns { groupId: Channel[] }
+				switchMap(
+					(groups) =>
+						forkJoin(
+							Object.fromEntries(groups.map((g) => [g.id, this.channelService.getForGroup(g.id, userId)])),
+						).pipe(defaultIfEmpty({})), // no groups -> forkJoin({}) emits nothing, so give {}
+				),
+			)
+			.subscribe({
+				next: (channelsByGroup) => this.channelsByGroup.set(channelsByGroup),
+				error: () => this.channelsByGroup.set({}),
 			});
-		});
-
-		console.log('groups:', this.groups);
-		console.log('channels:', this.channelsByGroup);
 	}
 }
