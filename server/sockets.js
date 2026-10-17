@@ -2,6 +2,11 @@ const { randomUUID } = require('crypto');
 const history = {}; // keeps only 5 recent messages
 
 function connect(io) {
+    // room became empty (last socket left or disconnected) -> forget its history
+    io.of('/').adapter.on('delete-room', (room) => {
+        delete history[room];
+    });
+
 	io.on('connection', (socket) => {
 		// connection
 		console.log('Connected: ', socket.id);
@@ -56,5 +61,12 @@ function isValidDraft(draft) {
     );
 }
 
+// remove deleted user's messages from every channel history
+function removeUserMessages(userId) {
+    for (const channelId of Object.keys(history)) {
+        history[channelId] = history[channelId].filter((m) => m.senderId !== userId);
+    }
+}
 
-module.exports={ connect };
+
+module.exports={ connect, removeUserMessages };

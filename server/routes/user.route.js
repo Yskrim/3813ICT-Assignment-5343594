@@ -1,6 +1,6 @@
-// USERS
 const express = require('express'); //express support
 const { getDB } = require('../db');
+const { removeUserMessages } = require('../sockets'); // messages live in socket memory, not db
 
 const router = express.Router(); // new router
 
@@ -8,7 +8,6 @@ const router = express.Router(); // new router
 const users = () => getDB().collection('users');
 const groups = () => getDB().collection('groups');
 const channels = () => getDB().collection('channels');
-const messages = () => getDB().collection('messages');
 
 // safe projection
 const SAFE = { projection: { _id: 0, password: 0 } };
@@ -39,7 +38,7 @@ router.delete('/users/:id', async (req, res) => {
 	await channels().updateMany({}, pullUser);
 
 	// DELETE USER'S MESSAGES FROM ALL CHANNELS
-	await messages().deleteMany({ senderId: id });
+    removeUserMessages(id);
 
 	res.status(204).send();
 });

@@ -22,8 +22,6 @@ async function seedDB() {
 		}
 		await col.createIndex({ id: 1 }, { unique: true });
 	}
-
-	await db.collection('messages').createIndex({ channelId: 1, createdAt: -1 });
 }
 
 if (require.main === module) {
