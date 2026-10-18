@@ -593,8 +593,6 @@ Not done.
 ![Settings](documentation/phase2/settings.png)  
 ![Admin panel](documentation/phase2/admin-panel.png)
 
-
-
 Phase 2 follows the same screens and layout as phase 1; changes: chat moved inside home (sidebar + chat on one page instead of a separate channel page), group search added to the sidebar, register mode added to login.
 
 ---
@@ -609,3 +607,4 @@ Phase 2 follows the same screens and layout as phase 1; changes: chat moved insi
 4. Username can't be changed after registration.
 5. No end-to-end tests.
 
+  
