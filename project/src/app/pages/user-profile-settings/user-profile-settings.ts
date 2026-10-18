@@ -1,9 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { User } from '../../models';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
+
+import { UtilsService } from '../../services/utils.service';
+import { AdminRequestService } from '../../services/admin-request.service';
 
 @Component({
 	imports: [FormsModule],
@@ -15,6 +18,8 @@ export class UserProfileSettings implements OnInit {
 	private auth = inject(AuthService);
 	private userService = inject(UserService);
 	private router = inject(Router);
+	private utils = inject(UtilsService);
+	private adminRequests = inject(AdminRequestService);
 	user?: User;
 
 	// copies before setting up the values
@@ -23,6 +28,9 @@ export class UserProfileSettings implements OnInit {
 	password = '';
 	avatarUrl = '';
 	dateOfBirth = '';
+
+	// delete request feedback
+	deleteStatus = signal<'idle' | 'sent' | 'error'>('idle');
 
 	constructor() {}
 
@@ -42,12 +50,7 @@ export class UserProfileSettings implements OnInit {
 		this.username = this.user.username;
 		this.password = this.user.password ?? ''; // if not empty
 		this.avatarUrl = this.user.avatarUrl ?? ''; // if not empty
-		this.dateOfBirth = this.formatDate(this.user.dateOfBirth);
-	}
-
-	private formatDate(d: Date | string): string {
-		const date = d instanceof Date ? d : new Date(d);
-		return date.toISOString().slice(0, 10);
+		this.dateOfBirth = this.utils.formatDate(this.user.dateOfBirth);
 	}
 
 	// apply saved changes
@@ -62,11 +65,6 @@ export class UserProfileSettings implements OnInit {
 	saveDisplayName(): void {
 		if (!this.user) return;
 		this.userService.update(this.user.id, { displayName: this.displayName }).subscribe((user) => this.applyUpdatedUser(user));
-	}
-
-	saveUsername(): void {
-		if (!this.user) return;
-		this.userService.update(this.user.id, { username: this.username }).subscribe((user) => this.applyUpdatedUser(user));
 	}
 
 	savePassword(): void {
@@ -84,6 +82,7 @@ export class UserProfileSettings implements OnInit {
 		this.userService.update(this.user.id, { dateOfBirth: this.dateOfBirth }).subscribe((user) => this.applyUpdatedUser(user));
 	}
 
+	// delete account -> request to superAdmin, not direct delete
 	deleteAccount(): void {
 		if (!this.user) return;
 
@@ -91,14 +90,19 @@ export class UserProfileSettings implements OnInit {
 			alert('SuperAdmin cannot delete account');
 			return;
 		}
+		if (!confirm('Send account deletion request to super admin?')) return;
 
-		this.userService.delete(this.user.id).subscribe({
-			next: () => {
-				this.auth.logout();
-				this.router.navigate(['/login']);
-			},
-			error: () => alert('Could not delete account'),
-		});
+		this.adminRequests
+			.create({
+				type: 'deleteAccount',
+				issuerId: this.user.id,
+				targetUserId: this.user.id,
+				note: 'user asked to delete own account',
+			})
+			.subscribe({
+				next: () => this.deleteStatus.set('sent'),
+				error: () => this.deleteStatus.set('error'),
+			});
 	}
 
 	logout(): void {
