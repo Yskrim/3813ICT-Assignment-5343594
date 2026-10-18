@@ -1,7 +1,7 @@
 <!-- home: sidebar with groups + channels, main area empty state -->
 <div class="home container-fluid pb-3">
 	<div class="d-flex h-100">
-		<app-sidebar [groups]="groups()" [channelsByGroup]="channelsByGroup()"></app-sidebar>
+		<app-sidebar [groups]="groups()" [channelsByGroup]="channelsByGroup()" (joined)="loadGroups()"></app-sidebar>
 
 		<main class="col-md-8 col-lg-9 h-100">
 			<router-outlet #homeOutlet="outlet"></router-outlet>

@@ -24,13 +24,23 @@ export class HomePage implements OnInit {
 	readonly groups = signal<Group[]>([]);
 	readonly channelsByGroup = signal<Record<string, Channel[]>>({});
 
+	// groups + their channels, again after join from search
+	loadGroups(): void {
+		const userId = this.user()?.id;
+		if (!userId) return;
+		// ... старый код getForUser / forkJoin без изменений
+	}
+    
 	// lifecycle ------------------------------------------------------------------------------------------
 	ngOnInit(): void {
+		this.loadGroups();
+
 		const userId = this.user()?.id;
 		if (!userId) return;
 
 		// get groups
-		this.groupService.getForUser(userId)
+		this.groupService
+			.getForUser(userId)
 			.pipe(
 				tap((groups) => this.groups.set(groups)),
 

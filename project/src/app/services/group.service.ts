@@ -45,6 +45,16 @@ export class GroupService {
         return getForSearch$;
 	}
 
+    // search all groups by name, for joining
+    search(q: string): Observable<Group[]> {
+        return this.http.get<Group[]>(this.endpointUri, { params: { q } });
+    }
+
+    // join group as member -> server adds user to group + its channels
+    join(groupId: string, userId: string): Observable<Group> {
+        return this.http.post<Group>(`${this.endpointUri}/${groupId}/join`, { userId });
+    }
+
 	create(name: string): Observable<Group> {
 		const create$ = this.http
 			.post<Group>(this.endpointUri, { name })

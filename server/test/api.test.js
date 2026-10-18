@@ -233,3 +233,48 @@ describe('POST /api/users (register)', () => {
 		assert.strictEqual(res.status, 400);
 	});
 });
+
+// group search + join ---
+describe('GET /api/groups?q= (search)', () => {
+	it('finds groups by part of name, case insensitive', async () => {
+		const res = await request(app).get('/api/groups').query({ q: 'MUSIC' });
+		assert.strictEqual(res.status, 200);
+		assert.deepStrictEqual(
+			res.body.map((g) => g.id),
+			['4'],
+		);
+	});
+
+	it('treats regex chars as plain text', async () => {
+		const res = await request(app).get('/api/groups').query({ q: '(' });
+		assert.strictEqual(res.status, 200);
+		assert.deepStrictEqual(res.body, []);
+	});
+});
+
+describe('POST /api/groups/:id/join', () => {
+	it('adds user to group once, then group channels are visible', async () => {
+		const res = await request(app).post('/api/groups/4/join').send({ userId: '1' });
+		assert.strictEqual(res.status, 200);
+
+		// second join -> still one entry
+		const again = await request(app).post('/api/groups/4/join').send({ userId: '1' });
+		assert.strictEqual(again.body.memberIds.filter((m) => m === '1').length, 1);
+
+		const mine = await request(app).get('/api/groups').query({ userId: '1' });
+		assert.ok(mine.body.some((g) => g.id === '4'));
+
+		const chans = await request(app).get('/api/channels').query({ groupId: '4', userId: '1' });
+		assert.strictEqual(chans.status, 200);
+	});
+
+	it('returns 404 for unknown group', async () => {
+		const res = await request(app).post('/api/groups/999/join').send({ userId: '1' });
+		assert.strictEqual(res.status, 404);
+	});
+
+	it('requires userId (400)', async () => {
+		const res = await request(app).post('/api/groups/4/join').send({});
+		assert.strictEqual(res.status, 400);
+	});
+});
