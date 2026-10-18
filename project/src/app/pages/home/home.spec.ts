@@ -1,16 +1,19 @@
+import { testProviders, loginAs } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Home } from './home';
+import { HomePage } from './home';
 
-describe('Home', () => {
-  let component: Home;
-  let fixture: ComponentFixture<Home>;
+describe('HomePage', () => {
+  let component: HomePage;
+  let fixture: ComponentFixture<HomePage>;
 
   beforeEach(async () => {
+    loginAs();
     await TestBed.configureTestingModule({
-      imports: [Home],
+      imports: [HomePage],
+      providers: testProviders,
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Home);
+    fixture = TestBed.createComponent(HomePage);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

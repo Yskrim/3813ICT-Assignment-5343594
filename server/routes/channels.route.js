@@ -1,65 +1,85 @@
-const express = require("express"); //express support
-const { readJson, writeJson } = require("../utils"); //r/w methods
+const express = require('express'); //express support
+const { getDB } = require('../db');
 
 const router = express.Router(); // new router
 
+// collections
+const channels = () => getDB().collection('channels');
+const groups = () => getDB().collection('groups');
+const users = () => getDB().collection('users');
+
+const NO_ID = { projection: { _id: 0 } };
+
 // CHANNELS
 
-// all channels for user
-router.get("/channels", async (req, res) => {
-    const userId = req.query.userId;
-    const groupId = req.query.groupId;
+// GET — channels of a group visible to the user
+router.get('/channels', async (req, res) => {
+	const userId = (req.query.userId ?? '').trim();
+	const groupId = (req.query.groupId ?? '').trim();
+	if (!userId) return res.status(400).json({ error: 'User id missing' });
+	if (!groupId) return res.status(400).json({ error: 'Group id missing' });
 
-    const channels = await readJson("channels.json");
-    let result = channels;
+	try {
+		// user + group in parallel
+		const [user, group] = await Promise.all([
+			users().findOne({ id: userId }, NO_ID),
+			groups().findOne({ id: groupId }, NO_ID),
+		]);
 
-    // filter by group
-    if(groupId) {
-        result = channels.filter(c => c.groupId === groupId)
-    }
+		if (!user) return res.status(404).json({ error: 'User not found' });
+		if (!group) return res.status(404).json({ error: 'Group not found' });
 
-    // filter by user
-    if(userId) {
-        const users = await readJson('users.json');
-        const groups = await readJson('groups.json');
+		const isMember = user.groupIds.includes(groupId) || group.memberIds.includes(userId);
+		if (!isMember) {
+			return res.status(403).json({ error: 'Not a member of this group' });
+		}
 
-        // find the user
-        const user = users.find(u => u.id === userId);
-        if(!user){
-            return res.status(404).json({error: "User not found"});
-        }
-
-        // find user's groups
-        const allowedGroupIds = new Set(user.groupIds); // set only adds unique values (duplicates ignored)
-        for ( const group of groups) {
-            if(group.memberIds.includes(userId)){
-                allowedGroupIds.add(group.id);
-            }
-        }
-
-        // filter channels by user's groups
-        result = result.filter(c => allowedGroupIds.has(c.groupId))
-    }
-    // return filtered channels
-    res.json(result);
+		// empty array is ok, group has no channels yet
+		const list = await channels().find({ groupId }, NO_ID).toArray();
+		res.json(list);
+	} catch (err) {
+		res.status(500).json({ error: 'Storage error' });
+	}
 });
 
-// all channels for a user's group
-router.get("/channels/:id", async (req, res) => {
-    const channels = await readJson("channels.json");
-    const channel = channels.find((c) => c.id === req.params.id);
-    if (!channel) return res.status(404).json({ error: "Not found" });
-    res.json(channel);
+// GET one channel by id
+router.get('/channels/:id', async (req, res) => {
+	try {
+		const channel = await channels().findOne({ id: req.params.id }, NO_ID);
+		if (!channel) return res.status(404).json({ error: 'Not found' });
+		res.json(channel);
+	} catch (err) {
+		res.status(500).json({ error: 'Storage error' });
+	}
 });
 
+// POST create a channel (admin)
+router.post('/channels', async (req, res) => {
+	const { name, groupId, adminIds, memberIds } = req.body ?? {};
+	const trimmedName = typeof name === 'string' ? name.trim() : '';
+	if (!trimmedName || !groupId) {
+		return res.status(400).json({ error: 'Name and GroupId are Required' });
+	}
 
-// create a channel (admin)
-router.post("/channels", async (req, res) => {
-    const channels = await readJson("channels.json");
-    const newChannel = { id: String(Date.now()), ...req.body };
-    channels.push(newChannel);
-    await writeJson("channels.json", channels);
-    res.status(201).json(newChannel);
+	try {
+		const group = await groups().findOne({ id: groupId }, NO_ID);
+		if (!group) return res.status(404).json({ error: 'Group not found' });
+
+		// admins/members default to the group's
+		const newChannel = {
+			id: String(Date.now()),
+			name: trimmedName,
+			groupId,
+			adminIds: Array.isArray(adminIds) ? adminIds : [...group.adminIds],
+			memberIds: Array.isArray(memberIds) ? memberIds : [...group.memberIds],
+		};
+
+		// insertOne adds _id to object -> insert a copy
+		await channels().insertOne({ ...newChannel });
+		res.status(201).json(newChannel);
+	} catch (err) {
+		res.status(500).json({ error: 'Storage error' });
+	}
 });
 
 module.exports = router; // export endpoint

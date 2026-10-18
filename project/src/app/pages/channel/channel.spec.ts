@@ -1,16 +1,19 @@
+import { testProviders, loginAs } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Channel } from './channel';
+import { ChannelPage } from './channel';
 
-describe('Channel', () => {
-  let component: Channel;
-  let fixture: ComponentFixture<Channel>;
+describe('ChannelPage', () => {
+  let component: ChannelPage;
+  let fixture: ComponentFixture<ChannelPage>;
 
   beforeEach(async () => {
+    loginAs();
     await TestBed.configureTestingModule({
-      imports: [Channel],
+      imports: [ChannelPage],
+      providers: testProviders,
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Channel);
+    fixture = TestBed.createComponent(ChannelPage);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

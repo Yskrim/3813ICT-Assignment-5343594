@@ -1,49 +1,67 @@
-const express = require("express");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
 const app = express();
-const http = require("http").Server(app);
-
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const { connect } = require('./sockets');
+const { connectDB } = require('./db');
 const PORT = 3000;
 
-// cors setup 
-// allows other ports access this server
-const allowedOrigins = ["http://localhost:4200", "http://127.0.0.1:4200"]; // trusted origins
+// create server ------------------------------------------------------------------------------------------------------
+const httpServer = createServer(app);
 
+// cors setup ------------------------------------------------------------------------------------------------------
+// allows other ports access this server from trusted origins
+const allowedOrigins = ['http://localhost:4200', 'http://127.0.0.1:4200'];
 const corsOptions = {
-    origin(origin, callback) {
-        // allow server-to-server / curl / postman (no Origin header)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`CORS blocked origin: ${origin}`));
-        }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // all methods
-    allowedHeaders: ["Content-Type", "Authorization"], // other discarded 
+	origin(origin, callback) {
+		// allow server-to-server or curl (no Origin header)
+		if (!origin || allowedOrigins.includes(origin)) {
+			callback(null, true);
+		} else {
+			callback(new Error(`CORS blocked origin: ${origin}`));
+		}
+	},
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // all methods
+	allowedHeaders: ['Content-Type', 'Authorization'], // other discarded
 };
 
-// sockets setup
-const io = require("socket.io")(http, {
-    cors: {
-        origin: allowedOrigins,
-        credentials: true,
-    },
-});
+// sockets setup ------------------------------------------------------------------------------------------------------
+const io = new Server(httpServer, { cors: { origin: allowedOrigins, credentials: true } });
+connect(io);
 
-function listen(http) {
-    http.listen(PORT, () => {
-        console.log(`Server is running on http://loaclhost:${PORT}`); // init listening
-    }).on("error", (err) => {
-        console.log("Server failed to start");
-        if (err.code === "EADDRINUSE") {
-            console.log(`Port ${PORT} is already in use.`);
-        }
-    });
-}
-
-// middleware
+// middleware ------------------------------------------------------------------------------------------------------
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use("/api", require("./routes")); // attach /api to routes defined under /api.
+app.use('/api', require('./routes')); // attach /api to routes defined under /api.
 
-listen(http)
+// start server ------------------------------------------------------------------------------------------------------
+if (require.main === module) {
+	connectDB()
+		.then(() => {
+			httpServer
+				.listen(PORT, () => {
+					console.log(`Server is running on http://localhost:${PORT}`);
+				})
+				.on('error', (err) => {
+					console.log('Server failed to start');
+					if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
+				});
+		})
+		.catch((err) => console.error('MongoDB connection failed', err));
+}
+
+// // start test server
+// if (require.main === module) {
+// 	httpServer
+// 		.listen(PORT, () => {
+// 			console.log(`Server is running on http://localhost:${PORT}`);
+// 		})
+// 		.on('error', (err) => {
+// 			console.log('Server failed to start');
+// 			if (err.code === 'EADDRINUSE') console.log(`Port ${PORT} is already in use.`);
+// 		});
+// }
+
+// export for tests
+module.exports = app;

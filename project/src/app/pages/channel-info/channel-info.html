@@ -1,47 +1,80 @@
 <!-- channel info page -->
+<div class="card border-0 shadow-sm rounded-4 p-4">
+  <!-- header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <div class="flex-grow-1">
+      <small class="text-body-secondary">{{ group()?.name }}</small>
+      <h4 class="mb-0 fw-semibold">
+        @if (isLoading()) {
+          <span class="placeholder-glow"><span class="placeholder col-4 rounded"></span></span>
+        } @else {
+          # {{ channel()?.name }}
+        }
+      </h4>
+    </div>
+    <button class="btn btn-sm btn-light" (click)="goBack()">Back</button>
+    @if (canManage()) {
+      <button class="btn btn-sm btn-outline-danger" (click)="deleteChannel()">Delete channel</button>
+    }
+  </div>
 
-<div class="card p-4">
-	<div class="mb-4">
-		<h6 class="text-muted">{{ group()?.name || 'Channel' }}/</h6>
-		<h4 class="text-muted pb-3 pt-1">{{ channel()?.name || 'Channel' }}</h4>
-		<!-- <h4 class="mb-4">{{ channel?.description || 'No description' }}</h4> -->
-		<div class="d-flex gap-2">
-			<button class="btn btn-sm btn-primary" (click)="goBack()">Go back</button>
-			<button class="btn btn-sm btn-outline-primary">Change name</button>
-			<button class="btn btn-sm btn-outline-primary">Change image</button>
-			<button class="btn btn-sm btn-outline-primary">Change theme</button>
-			<button class="btn btn-sm btn-danger">Delete channel</button>
-		</div>
-	</div>
+  <!-- action feedback -->
+  @if (flash(); as f) {
+    <div class="alert py-2 d-flex justify-content-between align-items-center"
+         [class]="'alert-' + f.kind">
+      <span>{{ f.text }}</span>
+      <button type="button" class="btn-close btn-sm" aria-label="Close"
+              (click)="flash.set(null)"></button>
+    </div>
+  }
 
-	<div>
-		<div>
-			<div class="mb-2 fw-bold">People</div>
-			<ul class="list-group">
-				@for (member of members(); track member.id) {
-					<li class="list-group-item">
-						<div
-							class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
-						>
-							<div>
-								<a
-									[routerLink]="['/user', member.id, 'profile']"
-									class="fw-semibold"
-									>{{ member.displayName }}</a
-								>
-								<div class="text-muted">{{ member.username }}</div>
-								<div class="text-muted">Role: {{ member.role }}</div>
-							</div>
-							<div class="d-flex gap-2">
-								<button class="btn btn-sm btn-outline-warning">Kick</button>
-								<button class="btn btn-sm btn-outline-danger">Ban</button>
-								<button class="btn btn-sm btn-outline-primary">Make admin</button>
-								<button class="btn btn-sm btn-outline-secondary">Report</button>
-							</div>
-						</div>
-					</li>
-				}
-			</ul>
-		</div>
-	</div>
+  <!-- members -->
+  <div class="d-flex align-items-center mb-2">
+    <h6 class="mb-0 fw-semibold flex-grow-1">Members</h6>
+    <span class="badge rounded-pill text-bg-light">{{ members().length }}</span>
+  </div>
+
+  <ul class="list-group list-group-flush">
+    @for (member of members(); track member.id) {
+      <li class="list-group-item d-flex flex-column flex-md-row align-items-md-center gap-2 px-0">
+        
+        <!-- who -->
+        <div class="flex-grow-1">
+          <span class="fw-semibold">{{ member.displayName }}</span>
+          @if (member.id === me()?.id) {
+            <span class="text-body-secondary small">(you)</span>
+          }
+          @if (member.role === 'superAdmin') {
+            <span class="badge text-bg-dark ms-1">super admin</span>
+          } @else if (isGroupAdmin(member.id)) {
+            <span class="badge text-bg-primary ms-1">group admin</span>
+          }
+          <div class="text-body-secondary small">{{ member.username }}</div>
+        </div>
+
+        <!-- actions: only for managers, never on yourself -->
+        @if (canManage() && member.id !== me()?.id && member.role !== 'superAdmin') {
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-warning" (click)="kick(member)">Kick</button>
+            @if (!isGroupAdmin(member.id)) {
+              <button class="btn btn-sm btn-outline-primary" (click)="makeAdmin(member)">
+                Make admin
+              </button>
+            }
+            <button class="btn btn-sm btn-outline-danger" (click)="ban(member)">Ban</button>
+          </div>
+        }
+      </li>
+    } @empty {
+      @if (!isLoading()) {
+        <li class="list-group-item text-body-secondary small px-0">No members in this channel.</li>
+      }
+    }
+  </ul>
+  
+  @if (canManage()) {
+    <p class="small text-body-secondary mt-3 mb-0">
+      Actions create requests. They take effect after an admin approves them in the admin panel.
+    </p>
+  }
 </div>

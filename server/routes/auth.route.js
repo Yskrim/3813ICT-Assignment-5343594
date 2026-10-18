@@ -1,47 +1,43 @@
-const express = require("express"); //express support
-const { readJson, writeJson } = require("../utils"); //r/w methods
+const express = require('express'); //express support
+const { readJson, writeJson } = require('../utils'); //r/w methods
+const { getDB } = require('../db');
 
 const router = express.Router(); // new router
 
+// users collection should be connected before any operation
+const users = () => getDB().collection('users');
+
 // AUTH
-router.post("/auth/login", async (req, res) => {
-    const { username, password } = req.body;
-    const users = await readJson("users.json");
+router.post('/auth/login', async (req, res) => {
+	// read body
+	const { username, password } = req.body;
+	if (!username) return res.status(400).json({ error: 'Missing username' });
+	if (!password) return res.status(400).json({ error: 'Missing password' });
 
-    const user = users.find(
-        (u) => u.username === username?.trim() && u.password === password,
-    );
+	// trim strings
+	const usrn = username.trim();
+	const pwd = password.trim();
 
-    if (!user) {
-        return res.status(401).json({ error: "Invalid credentials" });
-    }
+	// empty string check
+	if (!usrn) return res.status(400).json({ error: 'Missing username' });
+	if (!pwd) return res.status(400).json({ error: 'Missing password' });
 
-    const { password: _, ...authorisedUser } = user;
-    res.json(authorisedUser);
-    /* 
-    // this works as here 
+	try {
+        // db checks records, id and password never leave server
+		const user = await users().findOne(
+            { username: usrn, password: pwd },
+            { projection: { _id:0, password:0 }},
+        );
 
-    // 1. object user is spread into properties
-    // 2. object _ receives user's password. 
-        
-        // Password is cut out to prevent sharing.
-        const _ = { user.password }; // another object, never returned/used.
+		// User not found
+		if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-        // same as: 
-        const { ...authorisedUser } = user;
-        delete authorisedUser.password;
-
-    // 3. object authorisedUser receives everything else from user
-    const authorisedUser = {
-        id: user.id,
-        username: user.username, 
-        role: user.role,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        groupIds: user.groupIds,
-        dateOfBirth: user.dateOfBirth, 
-    };
-    */
+		// FROM THE DATA RECORD: discard password and return the rest as authorisedUser for session storage
+		const { password: _discarded, ...authorisedUser } = user;
+		res.status(201).json(authorisedUser);
+	} catch (err) {
+		res.status(500).json({ error: 'Some err' });
+	}
 });
 
 module.exports = router; // export endpoint

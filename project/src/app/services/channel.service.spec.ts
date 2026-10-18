@@ -1,3 +1,4 @@
+import { testProviders, loginAs } from '../../testing/test-providers';
 import { TestBed } from '@angular/core/testing';
 import { ChannelService } from './channel.service';
 
@@ -5,7 +6,8 @@ describe('ChannelService', () => {
 	let service: ChannelService;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		loginAs();
+		TestBed.configureTestingModule({ providers: testProviders });
 		service = TestBed.inject(ChannelService);
 	});
 

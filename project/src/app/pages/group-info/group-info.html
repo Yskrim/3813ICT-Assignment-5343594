@@ -1,59 +1,94 @@
 <!-- group info page -->
-
-<div class="card p-4">
-	<div class="mb-4">
-		<h6 class="text-muted">Group Info</h6>
-		<h4 class="mb-4">{{ group?.name }}</h4>
-		<div class="d-flex gap-2">
-			<button class="btn btn-sm btn-primary" (click)="goBack()">Go back</button>
-			<button class="btn btn-sm btn-outline-primary">Change name</button>
-			<button class="btn btn-sm btn-outline-primary">Change image</button>
-			<button class="btn btn-sm btn-outline-primary">Change theme</button>
-			<button class="btn btn-sm btn-outline-danger">Delete group</button>
+<div class="card border-0 shadow-sm rounded-4 p-4">
+	<!-- header -->
+	<div class="d-flex align-items-center gap-3 mb-4">
+		<div class="flex-grow-1">
+			<small class="text-body-secondary">Group info</small>
+			<h4 class="mb-0 fw-semibold">
+				@if (isLoading()) {
+					<span class="placeholder-glow"><span class="placeholder col-4 rounded"></span></span>
+				} @else {
+					{{ group()?.name }}
+				}
+			</h4>
 		</div>
+		<button class="btn btn-sm btn-light" (click)="goBack()">Back</button>
+		@if (canManage()) {
+			<button class="btn btn-sm btn-outline-danger" (click)="deleteGroup()">Delete group</button>
+		}
 	</div>
 
-	<div>
-		<div class="mb-4">
-			<div class="mb-2 fw-bold">Channels</div>
-			<ul class="list-group">
-				
-				@for (ch of channels; track ch.id) {
-					<li class="list-group-item d-flex justify-content-between align-items-center">
-						<a [routerLink]="['/groups', gId, 'channels', ch.id]">{{ ch.name }}</a>
-
-						<button [routerLink]="['/groups', gId, 'channels', ch.id]" class="btn btn-sm">Open</button>
-					</li>
-				}
-
-			</ul>
+	<!-- action feedback -->
+	@if (flash(); as f) {
+		<div class="alert py-2 d-flex justify-content-between align-items-center" [class]="'alert-' + f.kind">
+			<span>{{ f.text }}</span>
+			<button type="button" class="btn-close btn-sm" aria-label="Close" (click)="flash.set(null)"></button>
 		</div>
+	}
 
-		<div>
-			<div class="mb-2 fw-bold">People</div>
-			<ul class="list-group">
-
-				@for (mem of members; track mem.id) {
-					<li class="list-group-item">
-						<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-							<div>
-								<a routerLink="/profile" class="fw-semibold">{{
-									mem.displayName
-								}}</a>
-								<div class="text-muted">{{ mem.username }}</div>
-								<div class="text-muted">Role: {{ mem.role }}</div>
-							</div>
-							<div class="d-flex gap-2">
-								<button class="btn btn-sm btn-outline-warning">Kick</button>
-								<button class="btn btn-sm btn-outline-danger">Ban</button>
-								<button class="btn btn-sm btn-outline-primary">Make admin</button>
-								<button class="btn btn-sm btn-outline-secondary">Report</button>
-							</div>
-						</div>
-					</li>
-				}
-				
-			</ul>
-		</div>
+	<!-- channels -->
+	<div class="d-flex align-items-center mb-2">
+		<h6 class="mb-0 fw-semibold flex-grow-1">Channels</h6>
+		<span class="badge rounded-pill text-bg-light">{{ channels().length }}</span>
 	</div>
+
+	<ul class="list-group list-group-flush mb-4">
+		@for (ch of channels(); track ch.id) {
+			<li class="list-group-item d-flex align-items-center px-0">
+				<span class="flex-grow-1"># {{ ch.name }}</span>
+				<a class="btn btn-sm btn-light" [routerLink]="['/home/groups', gId, 'channels', ch.id]">Open</a>
+			</li>
+		} @empty {
+			@if (!isLoading()) {
+				<li class="list-group-item text-body-secondary small px-0">No channels yet.</li>
+			}
+		}
+	</ul>
+
+	<!-- people -->
+	<div class="d-flex align-items-center mb-2">
+		<h6 class="mb-0 fw-semibold flex-grow-1">People</h6>
+		<span class="badge rounded-pill text-bg-light">{{ members().length }}</span>
+	</div>
+
+	<ul class="list-group list-group-flush">
+		@for (member of members(); track member.id) {
+			<li class="list-group-item d-flex flex-column flex-md-row align-items-md-center gap-2 px-0">
+				<!-- who -->
+				<div class="flex-grow-1">
+					<span class="fw-semibold">{{ member.displayName }}</span>
+					@if (member.id === me()?.id) {
+						<span class="text-body-secondary small">(you)</span>
+					}
+					@if (member.role === 'superAdmin') {
+						<span class="badge text-bg-dark ms-1">super admin</span>
+					} @else if (isGroupAdmin(member.id)) {
+						<span class="badge text-bg-primary ms-1">group admin</span>
+					}
+					<div class="text-body-secondary small">{{ member.username }}</div>
+				</div>
+
+				<!-- actions: only for managers, never on yourself or super admin -->
+				@if (canManage() && member.id !== me()?.id && member.role !== 'superAdmin') {
+					<div class="d-flex gap-2">
+						<button class="btn btn-sm btn-outline-warning" (click)="kick(member)">Kick</button>
+						@if (!isGroupAdmin(member.id)) {
+							<button class="btn btn-sm btn-outline-primary" (click)="makeAdmin(member)">Make admin</button>
+						}
+						<button class="btn btn-sm btn-outline-danger" (click)="ban(member)">Ban</button>
+					</div>
+				}
+			</li>
+		} @empty {
+			@if (!isLoading()) {
+				<li class="list-group-item text-body-secondary small px-0">No people in this group.</li>
+			}
+		}
+	</ul>
+
+	@if (canManage()) {
+		<p class="small text-body-secondary mt-3 mb-0">
+			Actions create requests. They take effect after an admin approves them in the admin panel.
+		</p>
+	}
 </div>

@@ -56,8 +56,8 @@ export class AdminPanelPage implements OnInit {
 
 		// Load required data from server
 		forkJoin([
-			this.userService.getByUserId(this.user.id), // loads current user data
-			this.groupService.getGroupsForUser(this.user.id), // loads groups the user is in
+			this.userService.getById(this.user.id), // loads current user data
+			this.groupService.getForUser(this.user.id), // loads groups the user is in
 
 		]).subscribe({
 			next: ([user, groups]) => {
@@ -78,7 +78,7 @@ export class AdminPanelPage implements OnInit {
 				forkJoin(
 					this.groups().map((group: Group) =>
 
-						this.channelService.getByGroupId(this.user!.id, group.id)
+						this.channelService.getForGroup(group.id, this.user!.id)
 					),
 				).subscribe({
 					next: () => {

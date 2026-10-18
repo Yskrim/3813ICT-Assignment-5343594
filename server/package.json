@@ -1,19 +1,25 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "server for angular-chat app",
-  "license": "ISC",
-  "author": "Anton Korotkov",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "formidable": "^3.5.4",
-    "nodemon": "^3.1.14",
-    "socket.io": "^4.8.3"
-  }
+	"name": "server",
+	"version": "1.0.0",
+	"description": "server for angular-chat app",
+	"license": "ISC",
+	"author": "Anton Korotkov",
+	"type": "commonjs",
+	"main": "index.js",
+	"scripts": {
+		"seed": "node seed.js",
+		"test": "MONGO_DB=chat_test mocha --exit"
+	},
+	"dependencies": {
+		"cors": "^2.8.6",
+		"express": "^5.2.1",
+		"formidable": "^3.5.4",
+		"mongodb": "^7.7.0",
+		"nodemon": "^3.1.14",
+		"socket.io": "^4.8.3"
+	},
+	"devDependencies": {
+		"mocha": "^12.0.3",
+		"supertest": "^7.3.1"
+	}
 }

@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand bg-primary text-light mb-4">
-	<div class="container w-75">
+	<div class="container">
 		<div class="d-flex align-items-center gap-1 w-100">
 			@if (auth.currentUser(); as user) {
 				<a class="navbar-brand text-light me-3" routerLink="/home">App</a>
@@ -8,15 +8,15 @@
 				@if (!user) {
 					<a class="nav-link text-light px-2" routerLink="/login">Login</a>
 				}
-				<a class="nav-link text-light px-2" routerLink="/user-profile">Profile</a>
-				<a class="nav-link text-light px-2" routerLink="/user-profile-settings">Settings</a>
+				<a class="nav-link text-light px-2" routerLink="/profile">Profile</a>
+				<a class="nav-link text-light px-2" routerLink="/profile/settings">Settings</a>
 				@if (user?.role === 'groupAdmin' || user?.role === 'superAdmin') {
-					<a class="nav-link text-light px-2" routerLink="/admin-panel">Admin Panel</a>
+					<a class="nav-link text-light px-2" routerLink="/admin">Admin Panel</a>
 				}
 			}
 		</div>
 	</div>
 </nav>
-<div class="container w-75">
+<div class="container p-0 h-100">
 	<router-outlet></router-outlet>
 </div>
