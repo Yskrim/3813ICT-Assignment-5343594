@@ -1,4 +1,4 @@
-import { testProviders } from '../../../testing/test-providers';
+import { loginAs, testProviders } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Sidebar } from './sidebar';
 import { Channel, Group } from '../../models';
@@ -59,11 +59,9 @@ describe('Sidebar search', () => {
 	let el: HTMLElement;
 	let http: HttpTestingController;
 
-	beforeEach(async () => {
-		// Remove or replace 'login()' as it is not defined.
-		// If login logic is needed, call a login helper function or mock authentication here,
-		// otherwise, simply remove this line.
-		await TestBed.configureTestingModule({
+    beforeEach(async () => {
+        loginAs(); // join needs current user id
+        await TestBed.configureTestingModule({
 			imports: [Sidebar],
 			providers: testProviders,
 		}).compileComponents();

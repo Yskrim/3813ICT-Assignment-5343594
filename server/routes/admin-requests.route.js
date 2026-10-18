@@ -63,7 +63,7 @@ const REQUIRED_FIELDS = {
 	createChannel: ['targetGroupId', 'proposedChannelName'],
 
 	deleteAccount: ['targetUserId'],
-	deleteGroup: ['userId', 'targetGroupId'],
+	deleteGroup: ['targetGroupId'],
 	deleteChannel: ['targetGroupId', 'targetChannelId'],
 
 	banUser: ['targetUserId'],
